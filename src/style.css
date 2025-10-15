@@ -1,0 +1,362 @@
+:root {
+    --header-h: 70px;
+    --footer-h: 70px;
+    --sidebar-w: 320px;
+}
+:root {
+    --sidebar-w: 320px;
+}
+
+* {
+    box-sizing: border-box;
+}
+html,
+body,
+#root {
+    height: 100%;
+}
+body {
+    margin: 0;
+    background: #000;
+    color: #fff;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+/* Header & Footer */
+.app-header,
+.app-footer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    background: #000;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    z-index: 10;
+}
+.app-header {
+    top: 0;
+    height: var(--header-h);
+}
+.app-footer {
+    bottom: 0;
+    height: var(--footer-h);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: none;
+}
+.inner {
+    max-width: 1024px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 16px;
+}
+
+/* Sidebar (고정) */
+.sidebar {
+    position: fixed;
+    top: var(--header-h);
+    bottom: var(--footer-h);
+    left: 0;
+    width: var(--sidebar-w);
+    padding: 12px;
+    background: #121212;
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+.sidebar::-webkit-scrollbar {
+    width: 8px;
+}
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+}
+.sidebar-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 10px;
+    margin-bottom: 12px;
+    color: #fff;
+    font-weight: 700;
+    font-size: 18px;
+}
+.icon-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: transparent;
+    color: #fff;
+    cursor: pointer;
+}
+.icon-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-card {
+    background: #1f1f1f;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 16px;
+    margin: 12px 2px;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4) inset;
+}
+.card-title {
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 6px;
+}
+.card-sub {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+.card-cta {
+    display: inline-block;
+    padding: 10px 14px;
+    border-radius: 999px;
+    border: none;
+    background: #fff;
+    color: #000;
+    font-weight: 700;
+    cursor: pointer;
+}
+.card-cta:hover {
+    transform: translateY(-1px);
+}
+
+.sidebar-nav {
+    display: grid;
+    gap: 6px;
+    margin: 16px 2px;
+}
+.sidebar-nav a {
+    display: block;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #fff;
+    text-decoration: none;
+    background: #161616;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.sidebar-nav a:hover {
+    background: #1e1e1e;
+}
+.sidebar-nav a.active {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+}
+
+/* 본문은 사이드바 폭만큼 밀기 */
+.app-main {
+    padding-left: calc(var(--sidebar-w) + 16px);
+}
+.app-main::before {
+    content: "";
+    position: fixed;
+    top: var(--header-h);
+    bottom: var(--footer-h);
+    left: var(--sidebar-w);
+    width: 1px;
+    background: linear-gradient(
+            to bottom,
+            rgba(255, 255, 255, 0.08),
+            rgba(255, 255, 255, 0.02)
+    );
+    pointer-events: none;
+}
+/* (중복 유지) 본문 좌측 여백 추가 */
+.app-main {
+    max-width: 1024px;
+    margin: 0 auto;
+    padding: 0 16px;
+    padding-top: calc(var(--header-h) + 12px);
+    padding-bottom: calc(var(--footer-h) + 12px);
+    min-height: 100vh;
+}
+
+/* Router Nav */
+.app-nav {
+    display: flex;
+    gap: 8px;
+    margin: 12px 0 16px;
+}
+.app-nav a {
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-size: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    text-decoration: none;
+    background: rgba(255, 255, 255, 0.05);
+}
+.app-nav a.active {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+}
+
+/* 페이지 영역 */
+.page h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+/* 사이드바 위로 뜨는 플레이리스트 패널 */
+.pl-panel {
+    position: fixed;
+    left: 0;
+    top: var(--header-h);
+    bottom: var(--footer-h);
+    width: var(--sidebar-w);
+    background: #0f0f10;
+    border-right: 1px solid rgba(255,255,255,.08);
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    animation: plIn .12s ease-out;
+}
+@keyframes plIn { from { transform: translateX(-8px); opacity: .0; } to { transform: translateX(0); opacity: 1; } }
+
+.pl-panel-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 12px; border-bottom: 1px solid rgba(255,255,255,.08);
+    font-weight: 800;
+}
+.pl-panel-foot {
+    margin-top: auto; padding: 12px; border-top: 1px solid rgba(255,255,255,.08);
+    background: #121214;
+}
+
+.pl-empty { padding: 16px; }
+.pl-empty .title { font-weight: 800; margin-bottom: 6px; }
+.pl-empty .sub { color: rgba(255,255,255,.7); font-size: 14px; margin-bottom: 12px; }
+
+.pl-list { list-style: none; margin: 0; padding: 8px; overflow-y: auto; }
+.pl-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px; border-radius: 10px; margin: 4px 0;
+    background: #171717; border: 1px solid rgba(255,255,255,.06);
+}
+.pl-item:hover { background: #1c1c1c; }
+.pl-meta .name { font-weight: 700; }
+.pl-meta .sub { color: rgba(255,255,255,.7); font-size: 12px; }
+
+.pl-del {
+    background: transparent; color: rgba(255,255,255,.8);
+    border: 1px solid rgba(255,255,255,.12); border-radius: 8px;
+    padding: 6px 10px; cursor: pointer;
+}
+.pl-del:hover { background: rgba(255,255,255,.08); }
+/* 사이드바 트랙 리스트 */
+.sidebar-tracks { margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); }
+.tracks-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.tracks-title { font-weight: 700; font-size: 14px; }
+.tracks-count { opacity: .6; font-size: 12px; }
+
+.track-list { display:flex; flex-direction:column; gap:8px; max-height: 40vh; overflow:auto; padding-right:4px; }
+.track-item { display:flex; flex-direction:column; line-height:1.2; padding:6px 4px; border-radius:8px; }
+.track-item:hover { background: rgba(255,255,255,0.06); }
+.ti-title { font-size: 13px; font-weight: 600; }
+.ti-artist { font-size: 12px; opacity: .7; }
+
+/* 뒤로가기 버튼 */
+.back-btn {
+    width: 28px;
+    height: 28px;
+    margin-right: 6px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.12);
+    background: transparent;
+    color: #fff;
+    cursor: pointer;
+}
+.back-btn:hover { background: rgba(255,255,255,.08); }
+
+/* 리스트 모드용 플리 목록 */
+.sidebar-playlists { margin-top: 8px; }
+.pl-mini-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.pl-mini-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 12px; border-radius: 10px;
+    background: #161616; border: 1px solid rgba(255,255,255,.06);
+    cursor: pointer;
+}
+.pl-mini-item:hover { background: #1e1e1e; }
+.mini-name { font-weight: 700; color: #fff; font-size: 14px; }
+.mini-sub { font-size: 12px; opacity: .7; }
+/* 🔴 플레이리스트 삭제 버튼 */
+.mini-del {
+    background: transparent;
+    color: #ff5c5c;
+    border: 1px solid rgba(255, 92, 92, 0.5);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 12px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.mini-del:hover {
+    background: #ff5c5c;
+    color: #fff;
+    border-color: #ff5c5c;
+}
+
+/* 🎵 트랙 삭제 버튼 */
+.track-item .mini-del {
+    background: transparent;
+    color: #aaa;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 12px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.track-item .mini-del:hover {
+    background: #ff5c5c;
+    border-color: #ff5c5c;
+    color: #fff;
+}
+
+/* 🎶 트랙 행 정렬 고정 */
+.track-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 4px;
+}
+
+
+.empty-hint { color: rgba(255,255,255,.7); font-size: 13px; padding: 8px 2px; }
+
+.mini-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.mini-edit {
+    background: rgba(255, 255, 255, 0.05);
+    color: #cfcfcf;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    padding: 3px 7px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mini-edit:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+
