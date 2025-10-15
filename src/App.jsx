@@ -7,7 +7,7 @@ import {
     NavLink,
     Outlet,
     useNavigate,
-    useLocation,
+    useLocation
 } from "react-router-dom";
 import { usePlaylistStore } from "./playlistStore";
 
@@ -15,8 +15,9 @@ import { usePlaylistStore } from "./playlistStore";
 import HomePage from "./pages/Home.jsx";
 import DiscoverPage from "./pages/Discover.jsx";
 import SaasPage from "./pages/Saas.jsx";
-import LibraryPage from "./pages/Library.jsx";
+import LibraryPage from "./pages/Library/Library.jsx";
 import SearchPage from "./pages/Search.jsx";
+import PlaylistDetail from "./pages/PlaylistDetail.jsx";
 
 const DUMMY_TRACKS = [
     { id: 1, title: "Love wins all", artist: "아이유" },
@@ -53,19 +54,19 @@ function Layout() {
         setSidebarMode("list");
     };
 
-    React.useEffect(() => {
-        if (location.pathname === "/library") {
-            const sp = new URLSearchParams(location.search);
-            const id = sp.get("id");
-            if (id) {
-                setSelectedPlId(Number(id));
-                setSidebarMode("tracks");
-            } else {
-                setSelectedPlId(null);
-                setSidebarMode("list");
-            }
-        }
-    }, [location.pathname, location.search]);
+    // React.useEffect(() => {
+    //     if (location.pathname === "/library") {
+    //         const sp = new URLSearchParams(location.search);
+    //         const id = sp.get("id");
+    //         if (id) {
+    //             setSelectedPlId(Number(id));
+    //             setSidebarMode("tracks");
+    //         } else {
+    //             setSelectedPlId(null);
+    //             setSidebarMode("list");
+    //         }
+    //     }
+    // }, [location.pathname, location.search]);
 
     return (
         <div className="app">
@@ -424,6 +425,7 @@ export default function App() {
                     {/* body 메뉴: saas */}
                     <Route path="saas" element={<SaasPage />} />
                     <Route path="library" element={<LibraryPage />} />
+                    <Route path="playlist/:id" element={<PlaylistDetail />} />
                 </Route>
             </Routes>
         </HashRouter>
