@@ -16,8 +16,10 @@ import HomePage from "./pages/Home.jsx";
 import DiscoverPage from "./pages/Discover.jsx";
 import SaasPage from "./pages/Saas.jsx";
 import LibraryPage from "./pages/Library/Library.jsx";
+import PlayerBar from "./components/PlayerBar.js";
 import SearchPage from "./pages/Search.jsx";
 import PlaylistDetail from "./pages/PlaylistDetail.jsx";
+import Trending from "./pages/Trending.jsx";
 
 const DUMMY_TRACKS = [
     { id: 1, title: "Love wins all", artist: "아이유" },
@@ -208,6 +210,7 @@ function Layout() {
                                                     onKeyDown={(e) => {
                                                         if (e.key === "Enter") {
                                                             const v = listDraft.trim();
+
                                                             if (v && v !== p.name) updatePlaylist(p.id, v);
                                                             setEditingListId(null);
                                                         }
@@ -314,6 +317,8 @@ function Layout() {
             <main className="app-main">
                 <nav className="app-nav" style={{ display: "flex", gap: 12 }}>
                     <NavLink to="/" end>Home</NavLink>
+                    <NavLink to="/trending">Trending</NavLink>
+
                     <NavLink to="/discover">Discover</NavLink>
                     <NavLink to="/saas">saas</NavLink>
                     <NavLink to="/library">Library</NavLink>
@@ -324,6 +329,7 @@ function Layout() {
                 </section>
             </main>
 
+            <PlayerBar />
             {/* Footer 고정 (70px) */}
             <footer className="app-footer">
                 <div className="inner">© 2025 Your Name</div>
@@ -419,6 +425,7 @@ export default function App() {
             <Routes>
                 <Route element={<Layout />}>
                     <Route index element={<HomePage />} />
+                    <Route path="trending" element={<Trending />} />
                     <Route path="discover" element={<DiscoverPage />} />
                     {/* 헤더 검색 결과 페이지 (Nav에는 없음) */}
                     <Route path="search" element={<SearchPage />} />
