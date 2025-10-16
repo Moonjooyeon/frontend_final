@@ -1,0 +1,149 @@
+.saas {
+  padding: 12px;
+  height: calc(100vh - 160px);
+  overflow-y: auto;
+}
+
+/* 헤더/버튼 */
+.board-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+.btn {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  cursor: pointer;
+}
+.btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+.btn.primary {
+  background: #fff;
+  color: #000;
+  border-color: #fff;
+}
+.btn.sm {
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+.btn.danger {
+  border-color: rgba(255, 80, 80, 0.6);
+}
+
+/* 리스트 */
+.post-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.empty-tip {
+  padding: 14px;
+  border: 1px dashed rgba(255, 255, 255, 0.25);
+  border-radius: 10px;
+  color: #aaa;
+  text-align: center;
+}
+
+/* 입력 폼 */
+.post-editor {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.04);
+}
+.label {
+  display: block;
+  font-size: 13px;
+  opacity: 0.9;
+  margin-bottom: 6px;
+}
+.required {
+  color: #ff6b6b;
+}
+.input,
+.textarea {
+  width: 100%;
+  background: #0b0b0b;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 12px;
+  outline: none;
+}
+.input:focus,
+.textarea:focus {
+  border-color: #fff;
+}
+.counter {
+  text-align: right;
+  font-size: 12px;
+  opacity: 0.6;
+  margin: 4px 0 10px;
+}
+.editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* 아이템 */
+.post-item {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  overflow: hidden;
+}
+.post-title {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  color: #fff;
+  border: 0;
+  padding: 12px 14px;
+  cursor: pointer;
+  font-size: 15px;
+}
+.post-title:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* 내용 펼침 */
+.post-content-wrap {
+  max-height: 0;
+  overflow: hidden;
+  border-top: 1px solid transparent;
+  transition: max-height 220ms ease, border-color 220ms ease, padding 220ms ease;
+  padding: 0 14px;
+}
+.post-content-wrap.open {
+  max-height: 300px;
+  border-color: rgba(255, 255, 255, 0.1);
+  padding: 12px 14px;
+}
+.post-content-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.post-content {
+  white-space: pre-wrap;
+  line-height: 1.5;
+  font-size: 14px;
+  color: #eaeaea;
+  flex: 1;
+}
+.post-content .empty {
+  opacity: 0.6;
+  font-style: italic;
+}
+.content-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+}

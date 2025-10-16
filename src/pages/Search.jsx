@@ -1,54 +1,116 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo, useCallback, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import axios from "axios";
+
+// 사운드클라우드 쪽 기존 의존성
 import { useScSearch } from "../hooks/useScSearch";
 import { useNowPlayingStore } from "../useNowPlayingStore";
+import { toUiTrack } from "../lib/trackNormalize";
+
+// 간단 스타일(선택)
+const sectionStyle = { padding: 16, paddingBottom: 96 };
+const gridStyle = {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+    gap: 12,
+    listStyle: "none",
+    padding: 0,
+    margin: 0,
+};
+const tabBtn = (active) => ({
+    padding: "8px 12px",
+    borderRadius: 8,
+    border: "1px solid #444",
+    background: active ? "#222" : "transparent",
+    color: "#fff",
+    cursor: "pointer",
+});
 
 export default function SearchPage() {
-    const [sp] = useSearchParams();
-    const q = sp.get("q") || "";
-    const genre = sp.get("genre") || "all-music";
-    const { items, loading, next, error, search, loadMore } = useScSearch();
+    const [sp, setSp] = useSearchParams();
 
-    // ✅ 훅에서 필요한 액션만 뽑기 (이 이름이 실제 실행 함수)
-    const playTrack = useNowPlayingStore((s) => s.playTrack);
+    // 공통 파라미터
+    const q = (sp.get("q") || "").trim();
+    const source = (sp.get("source") || "sc").toLowerCase(); // youtube | sc
+    const genre = sp.get("genre") || "all-music"; // sc 전용
 
-    useEffect(() => {
-        const qToSend = genre === "all-music" ? "" : q;
-        window.scrollTo({ top: 0, behavior: "instant" });
-        search({ q: qToSend, genre, limit: 12 });
-    }, [q, genre, search]);
-
-    const onClickItem = (it, idx) => {
-        // 현재 목록을 큐로 넘기고 클릭한 아이템 재생
-        playTrack(it, items);
+    /** ─────────────────────────────────────────
+     *  탭 전환 핸들러 (URL 파라미터로 동기화)
+     *  ────────────────────────────────────────*/
+    const switchSource = (next) => {
+        const nextSp = new URLSearchParams(sp);
+        nextSp.set("source", next);
+        setSp(nextSp, { replace: true });
+        window.scrollTo({ top: 0, behavior: "auto" });
     };
 
     return (
-        <div style={{ padding: 16, paddingBottom: 96 }}>
-            <h2>Search Results</h2>
+        <div style={sectionStyle}>
+            <h2 style={{ color: "#fff", marginBottom: 12 }}>Search Results</h2>
 
+            {/* 탭 */}
+            <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                <button style={tabBtn(source === "sc")} onClick={() => switchSource("sc")}>
+                    SoundCloud
+                </button>
+                <button style={tabBtn(source === "youtube")} onClick={() => switchSource("youtube")}>
+                    YouTube
+                </button>
+            </div>
+
+            {source === "youtube" ? (
+                <YouTubeResult q={q} />
+            ) : (
+                <SoundCloudResult q={q} genre={genre} />
+            )}
+        </div>
+    );
+}
+
+/* =========================================================
+   SoundCloud 결과 (기존 코드 그대로 유지)
+========================================================= */
+function SoundCloudResult({ q, genre }) {
+    const { items, loading, next, error, search, loadMore } = useScSearch();
+    const playTrack = useNowPlayingStore((s) => s.playTrack);
+
+    useEffect(() => {
+        const qToSend = q || (genre === "all-music" ? "" : q);
+        window.scrollTo({ top: 0, behavior: "auto" });
+        search({ q: qToSend, genre, limit: 12 });
+    }, [q, genre, search]);
+
+    const queue = useMemo(() => items.map(toUiTrack).filter(Boolean), [items]);
+
+    return (
+        <>
             {loading && items.length === 0 && <div>Loading…</div>}
             {error && <div style={{ color: "tomato" }}>검색 중 오류가 발생했습니다.</div>}
             {!loading && items.length === 0 && !error && <div>결과가 없습니다.</div>}
 
-            <ul
-                style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-                    gap: 12,
-                }}
-            >
+            <ul style={gridStyle}>
                 {items.map((it, idx) => (
                     <li
-                        key={it.id}
-                        onClick={() => onClickItem(it, idx)} // ✅ idx 이제 정의됨
+                        key={it.id ?? String(idx)}
+                        onClick={() => {
+                            const t = queue[idx];
+                            if (t) playTrack(t, queue);
+                        }}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                const t = queue[idx];
+                                if (t) playTrack(t, queue);
+                            }
+                        }}
+                        tabIndex={0}
                         style={{
-                            listStyle: "none",
                             border: "1px solid #eee",
                             borderRadius: 10,
                             padding: 10,
                             cursor: "pointer",
                             userSelect: "none",
+                            outline: "none",
                         }}
                         title="클릭하여 재생"
                     >
@@ -56,7 +118,9 @@ export default function SearchPage() {
                             <img
                                 src={it.artwork}
                                 alt={it.title}
-                                style={{ width: "100%", borderRadius: 8 }}
+                                loading="lazy"
+                                draggable={false}
+                                style={{ width: "100%", borderRadius: 8, display: "block" }}
                             />
                         )}
                         <div style={{ marginTop: 8, fontWeight: 600 }}>{it.title}</div>
@@ -70,6 +134,147 @@ export default function SearchPage() {
                     {loading ? "Loading…" : "Load more"}
                 </button>
             )}
-        </div>
+        </>
+    );
+}
+
+/* =========================================================
+   YouTube 결과 (무한 스크롤 + iframe 모달)
+========================================================= */
+function YouTubeResult({ q }) {
+    const [videos, setVideos] = useState([]);
+    const [nextPageToken, setNextPageToken] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [selectedVideoId, setSelectedVideoId] = useState(null);
+    const detachRef = useRef(() => {});
+
+    const fetchVideos = useCallback(
+        async (pageToken = "") => {
+            if (!q) return;
+            setLoading(true);
+            try {
+                const apiKey = import.meta.env.VITE_YOUTUBE_API_KEY;
+                if (!apiKey) throw new Error("YouTube API Key가 없습니다. .env에 VITE_YOUTUBE_API_KEY를 설정하세요.");
+
+                const res = await axios.get("https://www.googleapis.com/youtube/v3/search", {
+                    params: {
+                        key: apiKey,
+                        part: "snippet",
+                        q,
+                        type: "video",
+                        maxResults: 12,
+                        pageToken,
+                        order: "viewCount",
+                    },
+                });
+
+                setVideos((prev) => [...prev, ...(res.data?.items ?? [])]);
+                setNextPageToken(res.data?.nextPageToken ?? null);
+            } catch (err) {
+                const apiMsg =
+                    err?.response?.data?.error?.message ||
+                    err?.response?.data?.error?.errors?.[0]?.reason ||
+                    err?.message ||
+                    "알 수 없는 오류";
+                setError(new Error(apiMsg));
+            } finally {
+                setLoading(false);
+            }
+        },
+        [q]
+    );
+
+    // q가 바뀌면 초기화 후 재검색
+    useEffect(() => {
+        setVideos([]);
+        setNextPageToken(null);
+        setError(null);
+        window.scrollTo({ top: 0, behavior: "auto" });
+        if (q) fetchVideos();
+    }, [q, fetchVideos]);
+
+    // 무한 스크롤
+    useEffect(() => {
+        const onScroll = () => {
+            const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+            if (scrollTop + clientHeight >= scrollHeight - 120 && !loading && nextPageToken) {
+                fetchVideos(nextPageToken);
+            }
+        };
+        window.addEventListener("scroll", onScroll);
+        detachRef.current = () => window.removeEventListener("scroll", onScroll);
+        return () => detachRef.current();
+    }, [loading, nextPageToken, fetchVideos]);
+
+    if (error) return <div style={{ color: "tomato" }}>Error: {error.message}</div>;
+
+    return (
+        <>
+            {videos.length === 0 && !loading && <div style={{ color: "#fff" }}>검색 결과가 없습니다.</div>}
+
+            <div style={gridStyle}>
+                {videos.map((v) => {
+                    const id = v.id?.videoId;
+                    const sn = v.snippet || {};
+                    return (
+                        <div
+                            key={id}
+                            onClick={() => setSelectedVideoId(id)}
+                            style={{
+                                border: "1px solid #eee",
+                                borderRadius: 10,
+                                padding: 10,
+                                cursor: "pointer",
+                                userSelect: "none",
+                                outline: "none",
+                            }}
+                            title="클릭하여 재생"
+                        >
+                            <img
+                                src={sn?.thumbnails?.medium?.url}
+                                alt={sn?.title || "thumbnail"}
+                                loading="lazy"
+                                style={{ width: "100%", borderRadius: 8, display: "block" }}
+                            />
+                            <div style={{ marginTop: 8, fontWeight: 600 }}>{sn?.title}</div>
+                            <div style={{ fontSize: 12, opacity: 0.7 }}>{sn?.channelTitle}</div>
+                            <div style={{ fontSize: 12, opacity: 0.6, marginTop: 4 }}>
+                                {sn?.description?.slice(0, 120)}
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {loading && <div style={{ marginTop: 12 }}>로딩 중...</div>}
+
+            {selectedVideoId && (
+                <div
+                    className="modal-overlay"
+                    onClick={() => setSelectedVideoId(null)}
+                    style={{
+                        position: "fixed",
+                        inset: 0,
+                        background: "rgba(0,0,0,0.7)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        zIndex: 9999,
+                    }}
+                >
+                    <iframe
+                        width="80%"
+                        height="450"
+                        src={`https://www.youtube.com/embed/${selectedVideoId}?autoplay=1`}
+                        title="YouTube video player"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        style={{ borderRadius: 12 }}
+                    />
+                </div>
+            )}
+        </>
     );
 }

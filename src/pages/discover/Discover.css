@@ -1,0 +1,115 @@
+.discover {
+  color: #fff;
+  padding: 20px;
+}
+h2 {
+  font-size: 24px;
+  margin-bottom: 24px;
+}
+
+.discover-section {
+  margin-bottom: 40px;
+}
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.section-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.arrow-controls {
+  display: flex;
+  gap: 8px;
+}
+.arrow-controls button {
+  background: #111;
+  border: 1px solid #444;
+  color: #fff;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.arrow-controls button:hover {
+  background: #fff;
+  color: #000;
+}
+
+/* 가로 스크롤 */
+.scroll-container {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding: 12px 0;
+  border-radius: 10px;
+  background: #0e0e0e;
+  scroll-snap-type: x mandatory;
+}
+.scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* 카드 */
+.item-card {
+  flex: 0 0 calc((100% - 64px) / 5);
+  background: #1b1b1b;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.05);
+  text-align: center;
+  padding: 12px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  scroll-snap-align: start;
+}
+.item-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.15);
+}
+
+.item-img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #333;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #888;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+.item-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.item-info {
+  background: #222;
+  border-radius: 8px;
+  padding: 6px 0;
+  font-size: 13px;
+}
+.item-info .title {
+  font-weight: 500;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+.item-info .artist {
+  font-size: 12px;
+  color: #aaa;
+}
+
+.loading {
+  padding: 40px;
+  text-align: center;
+  width: 100%;
+  font-size: 14px;
+  color: #aaa;
+}

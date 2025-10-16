@@ -1,0 +1,285 @@
+.home-container {
+  padding: 20px;
+  background-color: #111;
+  min-height: 50vh;
+  position: relative;
+}
+.home-title {
+  color: white;
+  margin-bottom: 16px;
+}
+
+/* ────────────── 캐러셀 ────────────── */
+.video-carousel {
+  position: relative;
+  overflow: hidden;
+}
+.video-list {
+  display: flex;
+  gap: 12px;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  align-items: flex-start;
+}
+.video-card {
+  flex: 0 0 22%;
+  min-width: 250px;
+  background: #000;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.video-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+.video-thumb {
+  width: 100%;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+  display: block;
+}
+.video-info {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  min-height: 70px;
+}
+.video-title {
+  font-size: 1rem;
+  margin: 6px 0 4px;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+.video-channel {
+  color: #aaa;
+  font-size: 0.9rem;
+}
+
+/* 좌우 스크롤 버튼 */
+.scroll-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 10;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.video-carousel:hover .scroll-btn {
+  opacity: 1;
+}
+.scroll-btn.left {
+  left: 10px;
+}
+.scroll-btn.right {
+  right: 10px;
+}
+
+/* ────────────── 모달 ────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.video-modal {
+  border-radius: 8px;
+}
+
+/* ────────────── 기본 트렌딩 (grid) ────────────── */
+.trending-section {
+  margin-top: 28px;
+  padding: 0 4px 96px;
+  overflow-y: hidden;
+}
+
+.trending-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  color: #fff;
+}
+
+.trending-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.trending-sub {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.trending-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.trending-item {
+  cursor: pointer;
+}
+
+.trending-loader {
+  padding: 24px 0 0;
+  text-align: center;
+  color: #ddd;
+  font-size: 14px;
+}
+
+/* ────────────── 가로 트렌딩 레일 (모두 동일 크기) ────────────── */
+:root {
+  --trend-card-w: 220px;
+  --trend-card-h: 300px;
+}
+
+.trendingX-section {
+  margin-top: 28px;
+}
+
+.trendingX-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.trendingX-title {
+  font-size: 20px;
+  font-weight: 700;
+}
+.trendingX-sub {
+  font-size: 13px;
+  color: #aaa;
+}
+
+.trendingX-error {
+  color: tomato;
+  margin-bottom: 8px;
+}
+.trendingX-error > button {
+  margin-left: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #555;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* 가로 스크롤 컨테이너 */
+.trendingX-row {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 8px;
+}
+
+/* 가로 리스트 */
+.trendingX-list {
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+  padding: 4px 8px;
+  margin: 0;
+  list-style: none;
+  min-height: var(--trend-card-h);
+}
+
+/* 각 아이템 — 크기 고정 */
+.trendingX-item {
+  flex: 0 0 var(--trend-card-w);
+  width: var(--trend-card-w);
+  height: var(--trend-card-h);
+  scroll-snap-align: start;
+}
+
+/* 내부 TrackCard의 hover 확대 방지 */
+.trendingX-item .track-card,
+.trendingX-item .track-card:hover {
+  transform: none !important;
+  transition: none !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* 이미지 비율 유지 */
+.trendingX-item img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1/1;
+  object-fit: cover;
+  display: block;
+}
+
+/* 오른쪽 센티넬 */
+.trendingX-tail {
+  flex: 0 0 1px;
+  width: 1px;
+  height: 1px;
+}
+
+/* 상태 라벨 */
+.trendingX-loader {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #9aa;
+}
+
+/* ────────────── Trending 좌우 스크롤 버튼 ────────────── */
+.trendingX-carousel {
+  position: relative;
+}
+
+.trendingX-carousel .scroll-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 10;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.trendingX-carousel:hover .scroll-btn {
+  opacity: 1;
+}
+.trendingX-carousel .scroll-btn.left {
+  left: 10px;
+}
+.trendingX-carousel .scroll-btn.right {
+  right: 10px;
+}

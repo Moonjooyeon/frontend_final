@@ -1,4 +1,4 @@
-// src/App.js
+// src/App.jsx
 import React, { useState } from "react";
 import {
     HashRouter,
@@ -7,38 +7,74 @@ import {
     NavLink,
     Outlet,
     useNavigate,
-    useLocation
 } from "react-router-dom";
-import { usePlaylistStore } from "./playlistStore";
+import "./App.css";
 
-// ✅ import들은 모두 최상단에
-import HomePage from "./pages/Home.jsx";
-import DiscoverPage from "./pages/Discover.jsx";
-import SaasPage from "./pages/Saas.jsx";
-import LibraryPage from "./pages/Library/Library.jsx";
-import PlayerBar from "./components/PlayerBar.js";
+/* ─────────────────────────────────────────────
+   👇 페이지 import (네 프로젝트 구조에 맞게 하나만 사용)
+   OPTION A: 팀원 구조 (pages 하위 폴더 세분화)
+────────────────────────────────────────────── */
+import HomePage from "./pages/home/Home.jsx";
+import DiscoverPage from "./pages/discover/Discover.jsx";
+// import SearchPage from "../pages/search/Search";
+
+ import BoardPage from "./pages/board/Board.jsx";
+// import Trending from "../pages/trending/Trending"; // 네가 추가했다면
+// import SaasPage from "../pages/saas/Saas";
+
+
+
 import SearchPage from "./pages/Search.jsx";
+import LibraryPage from "./pages/Library/Library.jsx";
 import PlaylistDetail from "./pages/PlaylistDetail.jsx";
-import Trending from "./pages/Trending.jsx";
+//import Trending from "./pages/Trending.jsx";
+import SaasPage from "./pages/Saas.jsx";
 
+
+/* ─────────────────────────────────────────────
+   전역 스토어 & 공용 컴포넌트
+────────────────────────────────────────────── */
+import { usePlaylistStore } from "./playlistStore"; // 팀원은 "../store/playlistStore"
+import PlayerBar from "./components/PlayerBar";
+
+/* ─────────────────────────────────────────────
+   더미 트랙 (빈 플레이리스트용 기본)
+────────────────────────────────────────────── */
 const DUMMY_TRACKS = [
-    { id: 1, title: "Love wins all", artist: "아이유" },
+    { id: 1, title: "Love wins all", artist: "아이유" }, // call → all로 교정
     { id: 2, title: "네모의 꿈", artist: "아이유" },
     { id: 3, title: "에잇 (Prod.&Feat. SUGA)", artist: "아이유, SUGA" },
 ];
+
+/* --------------------------------------
+    Layout (사이드바/패널은 팀원 UX 유지 + 네 라우트 추가)
+--------------------------------------- */
 function Layout() {
-    const location = useLocation();
     const navigate = useNavigate();
     const [q, setQ] = useState("");
-    const [selectedPlId, setSelectedPlId] = useState(null);
-    const [sidebarMode, setSidebarMode] = useState("list");
-    const { playlists, deletePlaylist, addPlaylist, removeTrack, setTracks, updatePlaylist } = usePlaylistStore();
 
-    const [editingListId, setEditingListId] = useState(null);
-    const [listDraft, setListDraft] = useState("");
-    const selectedPl = playlists.find((p) => p.id === selectedPlId) || null;
+    // Zustand
+    const {
+        playlists,
+        deletePlaylist,
+        addPlaylist,
+        removeTrack,
+        setTracks,
+        updatePlaylist,
+    } = usePlaylistStore();
+
+    // 사이드바 상태
+    const [sidebarMode, setSidebarMode] = useState("list"); // list | tracks
+    const [selectedPlId, setSelectedPlId] = useState(null);
     const [plOpen, setPlOpen] = useState(false);
 
+    // 인라인 이름수정
+    const [editingListId, setEditingListId] = useState(null);
+    const [listDraft, setListDraft] = useState("");
+
+    const selectedPl = playlists.find((p) => p.id === selectedPlId) || null;
+
+    // 헤더 검색
     const onHeaderSearchSubmit = (e) => {
         e.preventDefault();
         const next = q.trim();
@@ -46,33 +82,19 @@ function Layout() {
         navigate(`/search?q=${encodeURIComponent(next)}`);
     };
 
+    // 사이드바 열고닫기
     const openTracks = (id) => {
         setSelectedPlId(id);
         setSidebarMode("tracks");
     };
-
     const backToList = () => {
         setSelectedPlId(null);
         setSidebarMode("list");
     };
 
-    // React.useEffect(() => {
-    //     if (location.pathname === "/library") {
-    //         const sp = new URLSearchParams(location.search);
-    //         const id = sp.get("id");
-    //         if (id) {
-    //             setSelectedPlId(Number(id));
-    //             setSidebarMode("tracks");
-    //         } else {
-    //             setSelectedPlId(null);
-    //             setSidebarMode("list");
-    //         }
-    //     }
-    // }, [location.pathname, location.search]);
-
     return (
         <div className="app">
-            {/* Header 고정 (70px) */}
+            {/* Header */}
             <header className="app-header">
                 <div
                     className="inner"
@@ -83,9 +105,14 @@ function Layout() {
                         gap: 12,
                     }}
                 >
-                    <div>Music App</div>
+                    <div
+                        style={{ cursor: "pointer", fontWeight: 600 }}
+                        onClick={() => navigate("/")}
+                    >
+                        Music App
+                    </div>
 
-                    {/* 헤더 검색 */}
+                    {/* 검색창 */}
                     <form onSubmit={onHeaderSearchSubmit} style={{ display: "flex", gap: 8 }}>
                         <input
                             value={q}
@@ -105,34 +132,21 @@ function Layout() {
                 </div>
             </header>
 
-            {/* ✅ 사이드바 (단일 aside만 유지) */}
+            {/* 사이드바 */}
             <aside className="sidebar">
-
                 <div className="sidebar-head">
                     {sidebarMode === "tracks" ? (
                         <>
-                            <button
-                                className="back-btn"
-                                onClick={backToList}
-                                aria-label="back"
-                                style={{
-                                    marginRight: 8,
-                                    background: "none",
-                                    border: "none",
-                                    color: "#fff",
-                                    fontSize: 18,
-                                    cursor: "pointer"
-                                }}
-                            >
+                            <button className="back-btn" onClick={backToList} aria-label="back">
                                 ←
                             </button>
                             <strong>{selectedPl?.name || "내 라이브러리"}</strong>
                             <button
                                 className="icon-btn"
-                                aria-label="add"
                                 onClick={() => {
                                     const base = "내 플레이리스트";
-                                    const n = playlists.filter(p => p.name.startsWith(base)).length + 1;
+                                    const n =
+                                        playlists.filter((p) => p.name.startsWith(base)).length + 1;
                                     addPlaylist(`${base} ${n}`);
                                 }}
                             >
@@ -144,10 +158,10 @@ function Layout() {
                             <strong>내 라이브러리</strong>
                             <button
                                 className="icon-btn"
-                                aria-label="add"
                                 onClick={() => {
                                     const base = "내 플레이리스트";
-                                    const n = playlists.filter(p => p.name.startsWith(base)).length + 1;
+                                    const n =
+                                        playlists.filter((p) => p.name.startsWith(base)).length + 1;
                                     addPlaylist(`${base} ${n}`);
                                 }}
                             >
@@ -157,9 +171,7 @@ function Layout() {
                     )}
                 </div>
 
-
-
-                {/* 플레이리스트 1개라도 있으면 카드 숨김 */}
+                {/* 첫 안내 카드 */}
                 {playlists.length === 0 && (
                     <div className="sidebar-card">
                         <div className="card-title">첫 번째 플레이리스트를 만드세요.</div>
@@ -168,7 +180,8 @@ function Layout() {
                             className="card-cta"
                             onClick={() => {
                                 const base = "내 플레이리스트";
-                                const n = playlists.filter(p => p.name.startsWith(base)).length + 1;
+                                const n =
+                                    playlists.filter((p) => p.name.startsWith(base)).length + 1;
                                 addPlaylist(`${base} ${n}`);
                                 setSidebarMode("list");
                             }}
@@ -178,7 +191,7 @@ function Layout() {
                     </div>
                 )}
 
-                {/* 리스트 모드: 플레이리스트 목록만 */}
+                {/* 리스트 모드 */}
                 {sidebarMode === "list" && (
                     <section className="sidebar-playlists">
                         {playlists.length === 0 ? (
@@ -190,10 +203,10 @@ function Layout() {
                                         key={p.id}
                                         className="pl-mini-item"
                                         onClick={(e) => {
-                                             if (editingListId) return; // 이름 수정 중엔 클릭 무시
-                                            if (e.detail === 2) return; // 더블클릭 시 클릭 무시
+                                            if (editingListId) return;
+                                            if (e.detail === 2) return;
                                             openTracks(p.id);
-                                            }}
+                                        }}
                                     >
                                         <div className="mini-left">
                                             {editingListId === p.id ? (
@@ -210,7 +223,6 @@ function Layout() {
                                                     onKeyDown={(e) => {
                                                         if (e.key === "Enter") {
                                                             const v = listDraft.trim();
-
                                                             if (v && v !== p.name) updatePlaylist(p.id, v);
                                                             setEditingListId(null);
                                                         }
@@ -236,16 +248,14 @@ function Layout() {
                                         <div className="mini-actions">
                                             <button
                                                 className="mini-del"
-                                                aria-label="delete playlist"
                                                 onClick={(e) => {
-                                                    e.stopPropagation(); // 리스트 열기 막기
+                                                    e.stopPropagation();
                                                     deletePlaylist(p.id);
                                                     if (selectedPlId === p.id) backToList();
                                                 }}
                                             >
                                                 삭제
                                             </button>
-
                                             <button
                                                 className="mini-edit"
                                                 onClick={(e) => {
@@ -257,7 +267,6 @@ function Layout() {
                                                 ✍🏻
                                             </button>
                                         </div>
-
                                     </li>
                                 ))}
                             </ul>
@@ -265,7 +274,7 @@ function Layout() {
                     </section>
                 )}
 
-                {/* 트랙 모드: 선택된 플레이리스트 트랙 */}
+                {/* 트랙 모드 */}
                 {sidebarMode === "tracks" && selectedPl && (
                     <section className="sidebar-tracks">
                         <div className="tracks-head">
@@ -275,35 +284,34 @@ function Layout() {
               </span>
                         </div>
                         <ul className="track-list">
-                            {(selectedPl.tracks?.length ? selectedPl.tracks : DUMMY_TRACKS).map((t) => (
-                                <li key={t.id} className="track-item">
-                                    <div className="ti-title">{t.title}</div>
-                                    <div className="ti-artist">{t.artist}</div>
-                                    <button
-                                        className="mini-del"
-                                        aria-label="delete track"
-                                        onClick={() => {
-                                            if (!selectedPl.tracks?.length) {
-                                                // 더미를 실제 트랙으로 시드한 뒤 해당 곡 삭제
-                                                const seeded = DUMMY_TRACKS.filter((x) => x.id !== t.id);
-                                                setTracks(selectedPl.id, seeded);
-                                            } else {
-                                                removeTrack(selectedPl.id, t.id);
-                                            }
-                                        }}
-                                        style={{ marginLeft: "auto" }}
-                                    >
-                                        삭제
-                                    </button>
-                                </li>
-                            ))}
+                            {(selectedPl.tracks?.length ? selectedPl.tracks : DUMMY_TRACKS).map(
+                                (t) => (
+                                    <li key={t.id} className="track-item">
+                                        <div className="ti-title">{t.title}</div>
+                                        <div className="ti-artist">{t.artist}</div>
+                                        <button
+                                            className="mini-del"
+                                            onClick={() => {
+                                                if (!selectedPl.tracks?.length) {
+                                                    const seeded = DUMMY_TRACKS.filter((x) => x.id !== t.id);
+                                                    setTracks(selectedPl.id, seeded);
+                                                } else {
+                                                    removeTrack(selectedPl.id, t.id);
+                                                }
+                                            }}
+                                            style={{ marginLeft: "auto" }}
+                                        >
+                                            삭제
+                                        </button>
+                                    </li>
+                                )
+                            )}
                         </ul>
                     </section>
                 )}
             </aside>
-            {/* ✅ 여기서 aside 닫힘 (중첩 금지) */}
 
-            {/* 플레이리스트 패널은 사이드바 밖(형제) */}
+            {/* Playlist Panel (사이드바 밖) */}
             <PlaylistPanel
                 open={plOpen}
                 onClose={() => setPlOpen(false)}
@@ -317,10 +325,10 @@ function Layout() {
             <main className="app-main">
                 <nav className="app-nav" style={{ display: "flex", gap: 12 }}>
                     <NavLink to="/" end>Home</NavLink>
-                    <NavLink to="/trending">Trending</NavLink>
-
+                    {/*<NavLink to="/trending">Trending</NavLink>*/}
                     <NavLink to="/discover">Discover</NavLink>
-                    <NavLink to="/saas">saas</NavLink>
+                    <NavLink to="/saas">Saas</NavLink>
+                    <NavLink to="/board">게시판</NavLink>
                     <NavLink to="/library">Library</NavLink>
                 </nav>
 
@@ -329,18 +337,21 @@ function Layout() {
                 </section>
             </main>
 
-            <PlayerBar />
-            {/* Footer 고정 (70px) */}
+            {/* Footer (팀원 구조 유지: PlayerBar를 Footer에) */}
             <footer className="app-footer">
+                <PlayerBar />
                 <div className="inner">© 2025 Your Name</div>
             </footer>
         </div>
     );
 }
 
-// 파일 하단 컴포넌트
-function PlaylistPanel({ open, onClose, onSelect }) {  // ⬅️ onSelect 추가
-    const { playlists, addPlaylist, deletePlaylist, updatePlaylist } = usePlaylistStore();
+/* --------------------------------------
+    PlaylistPanel (팀원 구현 유지, onSelect 지원)
+--------------------------------------- */
+function PlaylistPanel({ open, onClose, onSelect }) {
+    const { playlists, addPlaylist, deletePlaylist, updatePlaylist } =
+        usePlaylistStore();
     const [editingId, setEditingId] = React.useState(null);
     const [draftName, setDraftName] = React.useState("");
 
@@ -354,7 +365,7 @@ function PlaylistPanel({ open, onClose, onSelect }) {  // ⬅️ onSelect 추가
 
     const handleCreate = () => {
         const base = "내 플레이리스트";
-        const n = playlists.filter(p => p.name.startsWith(base)).length + 1;
+        const n = playlists.filter((p) => p.name.startsWith(base)).length + 1;
         addPlaylist(`${base} ${n}`);
     };
 
@@ -362,14 +373,16 @@ function PlaylistPanel({ open, onClose, onSelect }) {  // ⬅️ onSelect 추가
         <div className="pl-panel">
             <div className="pl-panel-head">
                 <strong>플레이리스트</strong>
-                <button className="icon-btn" aria-label="close" onClick={onClose}>✕</button>
+                <button className="icon-btn" onClick={onClose}>✕</button>
             </div>
 
             {playlists.length === 0 ? (
                 <div className="pl-empty">
                     <div className="title">아직 플레이리스트가 없어요</div>
-                    <div className="sub">“새 플레이리스트 만들기”를 눌러 시작해 보세요.</div>
-                    <button className="card-cta" onClick={handleCreate}>새 플레이리스트 만들기</button>
+                    <div className="sub">“새 플레이리스트 만들기ˮ를 눌러 시작해 보세요.</div>
+                    <button className="card-cta" onClick={handleCreate}>
+                        새 플레이리스트 만들기
+                    </button>
                 </div>
             ) : (
                 <ul className="pl-list">
@@ -391,19 +404,20 @@ function PlaylistPanel({ open, onClose, onSelect }) {  // ⬅️ onSelect 추가
                                 ) : (
                                     <div
                                         className="name"
-                                        title="클릭: 열기 / 더블클릭: 이름 수정"
-                                        // ✅ 단일 클릭: 사이드바에 이 플레이리스트 열기
                                         onClick={() => onSelect?.(p.id)}
-                                        // ✅ 더블클릭: 이름 수정 모드
-                                        onDoubleClick={() => { setDraftName(p.name); setEditingId(p.id); }}
+                                        onDoubleClick={() => {
+                                            setDraftName(p.name);
+                                            setEditingId(p.id);
+                                        }}
                                     >
                                         {p.name}
                                     </div>
                                 )}
                                 <div className="sub">{p.tracks?.length ?? 0}곡</div>
                             </div>
-
-                            <button className="pl-del" onClick={() => deletePlaylist(p.id)}>삭제</button>
+                            <button className="pl-del" onClick={() => deletePlaylist(p.id)}>
+                                삭제
+                            </button>
                         </li>
                     ))}
                 </ul>
@@ -411,25 +425,28 @@ function PlaylistPanel({ open, onClose, onSelect }) {  // ⬅️ onSelect 추가
 
             {playlists.length > 0 && (
                 <div className="pl-panel-foot">
-                    <button className="card-cta" onClick={handleCreate}>새 플레이리스트 만들기</button>
+                    <button className="card-cta" onClick={handleCreate}>
+                        새 플레이리스트 만들기
+                    </button>
                 </div>
             )}
         </div>
     );
 }
 
-
+/* --------------------------------------
+    라우터
+--------------------------------------- */
 export default function App() {
     return (
         <HashRouter>
             <Routes>
                 <Route element={<Layout />}>
                     <Route index element={<HomePage />} />
-                    <Route path="trending" element={<Trending />} />
+                    {/* <Route path="trending" element={<Trending />} />*/}
                     <Route path="discover" element={<DiscoverPage />} />
-                    {/* 헤더 검색 결과 페이지 (Nav에는 없음) */}
+                    <Route path="board" element={<BoardPage />} />      {/* 없으면 제거 */}
                     <Route path="search" element={<SearchPage />} />
-                    {/* body 메뉴: saas */}
                     <Route path="saas" element={<SaasPage />} />
                     <Route path="library" element={<LibraryPage />} />
                     <Route path="playlist/:id" element={<PlaylistDetail />} />

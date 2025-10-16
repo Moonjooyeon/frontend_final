@@ -1,7 +1,9 @@
 // src/pages/Trending.jsx
 import React, { useMemo } from "react";
-import { useInfinitePage } from "../hooks/useInfinitePage";
+import { useInfinitePage } from "../hooks/useInfinitePage.jsx";
 import TrackCard from "../components/TrackCard";
+import { useNowPlayingStore } from "../useNowPlayingStore";
+import { toUiTrack } from "../lib/trackNormalize";
 
 async function fetchTrending(cursor) {
     const params = cursor
@@ -16,12 +18,18 @@ async function fetchTrending(cursor) {
 export default function Trending() {
     const { items, loading, loaderRef } = useInfinitePage(fetchTrending);
 
-    // charts는 { track } 랩핑 → 평탄화
-    const tracks = useMemo(
-        () => items.map((x) => x.track || x),
-        [items]
-    );
+    const playTrack = useNowPlayingStore((s) => s.playTrack);
 
+    const tracks = useMemo(() => items.map((x) => x.track || x), [items]);
+
+    // 재생 큐(정규화)
+    const queue = useMemo(() => tracks.map(toUiTrack).filter(Boolean), [tracks]);
+
+    const onPlayIndex = (idx) => {
+        const t = queue[idx];
+        if (!t) return;
+        playTrack(t, queue);      // ← 하단 재생바 열리고 자동재생(우리가 PlayerBar에 위젯 API 붙였음)
+    };
     return (
         <div style={{ padding: 16 }}>
             <h2 style={{ marginBottom: 12 }}>Trending</h2>
@@ -35,8 +43,13 @@ export default function Trending() {
                     margin: 0,
                 }}
             >
-                {tracks.map((t) => (
-                    <li key={t.id}>
+                {tracks.map((t, idx) => (
+                    <li
+                        key={t.id}
+                        onClick={() => onPlayIndex(idx)}
+                        style={{ cursor: "pointer" }}
+                        title="클릭하여 재생"
+                    >
                         <TrackCard track={t} />
                     </li>
                 ))}
