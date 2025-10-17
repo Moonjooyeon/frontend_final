@@ -3,14 +3,14 @@ import React, { useEffect, useRef, useState, useMemo } from "react";
 import axios from "axios";
 import "./Home.css";
 
-// ⬇️ 가로 무한 스크롤 훅 / 컴포넌트
 import { useInfiniteRow } from "../../hooks/useInfiniteRow.jsx";
 import TrackCard from "../../components/TrackCard";
 import { useNowPlayingStore } from "../../useNowPlayingStore";
 import { toUiTrack } from "../../lib/trackNormalize";
+import AddToPlaylistButton from "../../components/AddToPlaylistButton.jsx";
 
 /* ─────────────────────────────────────────────
-   0) cursor 정규화 + 단일 인코딩 fetchTrending (전역에 1개만!)
+   cursor 정규화 + fetchTrending
 ────────────────────────────────────────────── */
 function normalizeCursorForQS(cursor) {
   if (!cursor) return cursor;
@@ -20,7 +20,9 @@ function normalizeCursorForQS(cursor) {
       const dec = decodeURIComponent(raw);
       if (dec === raw) break;
       raw = dec;
-    } catch { break; }
+    } catch {
+      break;
+    }
   }
   return raw;
 }
@@ -34,7 +36,6 @@ async function fetchTrending(cursor) {
   const res = await fetch(url);
 
   if (!res.ok) {
-    // search/tracks 커서에서 500 등 받으면 초기 파라미터로 1회 리셋
     if (cursor && res.status === 500) {
       const retry = await fetch(
           `/api/charts/trending?${new URLSearchParams({
@@ -70,8 +71,10 @@ const idOf = (raw) => {
   );
 };
 
+/* ─────────────────────────────────────────────
+   Home 컴포넌트
+────────────────────────────────────────────── */
 export default function Home() {
-  // ───────── YouTube 인기 목록 상태 (페이지 전체를 막지 않도록 분리) ─────────
   const [videos, setVideos] = useState([]);
   const [ytLoading, setYtLoading] = useState(false);
   const [ytError, setYtError] = useState(null);
@@ -90,16 +93,19 @@ export default function Home() {
           );
         }
 
-        const res = await axios.get("https://www.googleapis.com/youtube/v3/videos", {
-          params: {
-            key: apiKey,
-            part: "snippet,statistics",
-            chart: "mostPopular",
-            regionCode: "KR",
-            videoCategoryId: "10",
-            maxResults: 10,
-          },
-        });
+        const res = await axios.get(
+            "https://www.googleapis.com/youtube/v3/videos",
+            {
+              params: {
+                key: apiKey,
+                part: "snippet,statistics",
+                chart: "mostPopular",
+                regionCode: "KR",
+                videoCategoryId: "10",
+                maxResults: 10,
+              },
+            }
+        );
 
         setVideos(res.data?.items ?? []);
       } catch (err) {
@@ -112,8 +118,10 @@ export default function Home() {
     loadPopularVideos();
   }, []);
 
-  const scrollLeft = () => scrollRef.current?.scrollBy({ left: -300, behavior: "smooth" });
-  const scrollRight = () => scrollRef.current?.scrollBy({ left: 300, behavior: "smooth" });
+  const scrollLeft = () =>
+      scrollRef.current?.scrollBy({ left: -300, behavior: "smooth" });
+  const scrollRight = () =>
+      scrollRef.current?.scrollBy({ left: 300, behavior: "smooth" });
 
   return (
       <div className="home-container">
@@ -121,29 +129,65 @@ export default function Home() {
         <h2 className="home-title">실시간 인기 음악</h2>
 
         <div className="video-carousel">
-          <button className="scroll-btn left" onClick={scrollLeft}>◀</button>
-          <button className="scroll-btn right" onClick={scrollRight}>▶</button>
+          <button className="scroll-btn left" onClick={scrollLeft}>
+            ◀
+          </button>
+          <button className="scroll-btn right" onClick={scrollRight}>
+            ▶
+          </button>
 
           <div ref={scrollRef} className="video-list">
-            {ytLoading && <div style={{ color: "#aaa", padding: 16 }}>불러오는 중…</div>}
-            {ytError && <div style={{ color: "tomato", padding: 16 }}>YouTube 오류: {ytError.message}</div>}
-            {!ytLoading && !ytError && videos.map((video) => (
-                <div
-                    key={video.id}
-                    onClick={() => setSelectedVideoId(video.id)}
-                    className="video-card"
-                >
-                  <img
-                      src={video.snippet?.thumbnails?.medium?.url}
-                      alt={video.snippet?.title || "thumbnail"}
-                      className="video-thumb"
-                  />
-                  <div className="video-info">
-                    <h3 className="video-title">{video.snippet?.title}</h3>
-                    <p className="video-channel">{video.snippet?.channelTitle}</p>
-                  </div>
+            {ytLoading && (
+                <div style={{ color: "#aaa", padding: 16 }}>불러오는 중…</div>
+            )}
+            {ytError && (
+                <div style={{ color: "tomato", padding: 16 }}>
+                  YouTube 오류: {ytError.message}
                 </div>
-            ))}
+            )}
+            {!ytLoading &&
+                !ytError &&
+                videos.map((video) => {
+                  // ▶︎ AddToPlaylistButton이 그대로 받게 준비된 아이템
+                  const ytItem = {
+                    id: video.id,
+                    kind: "video",
+                    source: "youtube",
+                    externalId: video.id,
+                    title: video.snippet?.title,
+                    subtitle: video.snippet?.channelTitle,
+                    channel: video.snippet?.channelTitle,
+                    thumbnail: video.snippet?.thumbnails?.medium?.url,
+                    url: `https://www.youtube.com/watch?v=${video.id}`,
+                  };
+
+                  return (
+                      <div
+                          key={video.id}
+                          onClick={() => setSelectedVideoId(video.id)}
+                          className="video-card"
+                      >
+                        <img
+                            src={video.snippet?.thumbnails?.medium?.url}
+                            alt={video.snippet?.title || "thumbnail"}
+                            className="video-thumb"
+                        />
+                        <div className="video-info">
+                          <h3 className="video-title">{video.snippet?.title}</h3>
+                          <p className="video-channel">{video.snippet?.channelTitle}</p>
+                        </div>
+
+                        {/* ▶︎ 하단 바 스타일 드롭다운 버튼 */}
+                        <div style={{ padding: 10 }}>
+                          <AddToPlaylistButton
+                              track={ytItem}
+                              toItem={(x) => x}     // 이미 완성된 아이템이므로 그대로
+                              variant="bar"         // 카드 하단 바 스타일
+                          />
+                        </div>
+                      </div>
+                  );
+                })}
           </div>
         </div>
 
@@ -172,19 +216,20 @@ export default function Home() {
    Home 아래에 붙는 가로 Trending 레일
 ========================================================= */
 function TrendingRow() {
-  const { items, loading, error, retry, rowRef, tailRef } = useInfiniteRow((c) => fetchTrending(c || null));
+  const { items, loading, error, retry, rowRef, tailRef } = useInfiniteRow((c) =>
+      fetchTrending(c || null)
+  );
   const playTrack = useNowPlayingStore((s) => s.playTrack);
   const [scrollEl, setScrollEl] = useState(null);
 
   const tracks = useMemo(() => items.map((x) => x.track || x), [items]);
-  const queue  = useMemo(() => tracks.map(toUiTrack).filter(Boolean), [tracks]);
+  const queue = useMemo(() => tracks.map(toUiTrack).filter(Boolean), [tracks]);
 
   const onPlayIndex = (idx) => {
     const t = queue[idx];
     if (t) playTrack(t, queue);
   };
 
-  // ✅ 좌우 스크롤 제어
   const scrollLeft = () => {
     if (scrollEl) scrollEl.scrollBy({ left: -300, behavior: "smooth" });
   };
@@ -192,7 +237,6 @@ function TrendingRow() {
     if (scrollEl) scrollEl.scrollBy({ left: 300, behavior: "smooth" });
   };
 
-  // rowRef.current를 상태로 잡아놓기 (버튼에서 사용 가능하게)
   useEffect(() => {
     if (rowRef.current) setScrollEl(rowRef.current);
   }, [rowRef]);
@@ -211,10 +255,13 @@ function TrendingRow() {
             </div>
         )}
 
-        {/* 좌우 스크롤 버튼 */}
         <div className="trendingX-carousel">
-          <button className="scroll-btn left" onClick={scrollLeft}>◀</button>
-          <button className="scroll-btn right" onClick={scrollRight}>▶</button>
+          <button className="scroll-btn left" onClick={scrollLeft}>
+            ◀
+          </button>
+          <button className="scroll-btn right" onClick={scrollRight}>
+            ▶
+          </button>
 
           <div className="trendingX-row" ref={rowRef}>
             <ul className="trendingX-list">
@@ -237,9 +284,10 @@ function TrendingRow() {
         </div>
 
         <div className="trendingX-loader">
-          {loading ? "불러오는 중…" : "오른쪽으로 스크롤하거나 버튼을 눌러 더 보기"}
+          {loading
+              ? "불러오는 중…"
+              : "오른쪽으로 스크롤하거나 버튼을 눌러 더 보기"}
         </div>
       </section>
   );
 }
-
