@@ -1,13 +1,33 @@
+// src/pages/Search.jsx
 import React, { useEffect, useMemo, useCallback, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import axios from "axios";
 
-// 사운드클라우드 쪽 기존 의존성
+// 기존 의존성
 import { useScSearch } from "../hooks/useScSearch";
 import { useNowPlayingStore } from "../useNowPlayingStore";
 import { toUiTrack } from "../lib/trackNormalize";
 
-// 간단 스타일(선택)
+// ▶ 추가: 담기 버튼 (플리 피커 내장)
+import AddToPlaylistButton from "../components/AddToPlaylistButton";
+
+// ▶ (선택) 유튜브 결과를 store item으로 정규화
+const ytToPlaylistItem = (v = {}) => {
+    const id = v.id?.videoId || v.id;
+    const sn = v.snippet || {};
+    return {
+        kind: "video",
+        source: "youtube",
+        externalId: String(id ?? ""),
+        title: sn.title || "(Untitled)",
+        subtitle: sn.channelTitle || "",
+        durationMs: undefined, // 필요시 별도 API로 보강
+        thumbnail: sn.thumbnails?.medium?.url || "",
+        url: id ? `https://www.youtube.com/watch?v=${id}` : "",
+    };
+};
+
+// 간단 스타일
 const sectionStyle = { padding: 16, paddingBottom: 96 };
 const gridStyle = {
     display: "grid",
@@ -34,9 +54,7 @@ export default function SearchPage() {
     const source = (sp.get("source") || "sc").toLowerCase(); // youtube | sc
     const genre = sp.get("genre") || "all-music"; // sc 전용
 
-    /** ─────────────────────────────────────────
-     *  탭 전환 핸들러 (URL 파라미터로 동기화)
-     *  ────────────────────────────────────────*/
+    // 탭 전환
     const switchSource = (next) => {
         const nextSp = new URLSearchParams(sp);
         nextSp.set("source", next);
@@ -68,7 +86,7 @@ export default function SearchPage() {
 }
 
 /* =========================================================
-   SoundCloud 결과 (기존 코드 그대로 유지)
+   SoundCloud 결과 (+ 플리 담기 버튼)
 ========================================================= */
 function SoundCloudResult({ q, genre }) {
     const { items, loading, next, error, search, loadMore } = useScSearch();
@@ -105,6 +123,7 @@ function SoundCloudResult({ q, genre }) {
                         }}
                         tabIndex={0}
                         style={{
+                            position: "relative",
                             border: "1px solid #eee",
                             borderRadius: 10,
                             padding: 10,
@@ -125,6 +144,29 @@ function SoundCloudResult({ q, genre }) {
                         )}
                         <div style={{ marginTop: 8, fontWeight: 600 }}>{it.title}</div>
                         <div style={{ fontSize: 12, opacity: 0.7 }}>{it.artist}</div>
+
+                        {/* ▶ 담기 버튼: 클릭 전파 막기 (재생 방지) */}
+                        <div style={{ position: "absolute", right: 10, top: 10 }}>
+                            <div
+                                onClick={(e) => e.stopPropagation()}
+                                onMouseDown={(e) => e.stopPropagation()}
+                            >
+                                <AddToPlaylistButton
+                                    // AddToPlaylistButton 내부에서 scToPlaylistItem(track) 사용
+                                    track={{
+                                        id: it.id,
+                                        title: it.title,
+                                        user: { username: it.artist, avatar_url: it.artwork },
+                                        duration: it.durationMs,
+                                        permalink: it.permalink || it.url, // toUiTrack 결과에 따라
+                                        artwork_url: it.artwork,
+                                        source: "soundcloud",
+                                    }}
+                                    variant="chip"
+                                    onAdded={() => {/* 토스트 등 필요 시 */}}
+                                />
+                            </div>
+                        </div>
                     </li>
                 ))}
             </ul>
@@ -139,7 +181,7 @@ function SoundCloudResult({ q, genre }) {
 }
 
 /* =========================================================
-   YouTube 결과 (무한 스크롤 + iframe 모달)
+   YouTube 결과 (무한 스크롤 + iframe 모달 + 플리 담기)
 ========================================================= */
 function YouTubeResult({ q }) {
     const [videos, setVideos] = useState([]);
@@ -222,6 +264,7 @@ function YouTubeResult({ q }) {
                             key={id}
                             onClick={() => setSelectedVideoId(id)}
                             style={{
+                                position: "relative",
                                 border: "1px solid #eee",
                                 borderRadius: 10,
                                 padding: 10,
@@ -241,6 +284,22 @@ function YouTubeResult({ q }) {
                             <div style={{ fontSize: 12, opacity: 0.7 }}>{sn?.channelTitle}</div>
                             <div style={{ fontSize: 12, opacity: 0.6, marginTop: 4 }}>
                                 {sn?.description?.slice(0, 120)}
+                            </div>
+
+                            {/* ▶ 담기 버튼: 클릭 전파 막기 (모달 방지) */}
+                            <div style={{ position: "absolute", right: 10, top: 10 }}>
+                                <div
+                                    onClick={(e) => e.stopPropagation()}
+                                    onMouseDown={(e) => e.stopPropagation()}
+                                >
+                                    <AddToPlaylistButton
+                                        // YouTube는 커스텀 변환기로 items 스키마 맞춤
+                                        track={v}
+                                        toItem={ytToPlaylistItem}
+                                        variant="chip"
+                                        onAdded={() => {/* 토스트 등 필요 시 */}}
+                                    />
+                                </div>
                             </div>
                         </div>
                     );
