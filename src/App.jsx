@@ -16,16 +16,13 @@ import "./App.css";
 ────────────────────────────────────────────── */
 import HomePage from "./pages/home/Home.jsx";
 import DiscoverPage from "./pages/discover/Discover.jsx";
-// import SearchPage from "../pages/search/Search";
 import BoardPage from "./pages/board/Board.jsx";
-// import Trending from "../pages/trending/Trending"; // 네가 추가했다면
-// import SaasPage from "../pages/saas/Saas";
+
 
 import SearchPage from "./pages/Search.jsx";
 import LibraryPage from "./pages/Library/Library.jsx";
 import PlaylistDetail from "./pages/PlaylistDetail.jsx";
-// import Trending from "./pages/Trending.jsx";
-import SaasPage from "./pages/Saas.jsx";
+
 
 /* ─────────────────────────────────────────────
    전역 스토어 & 공용 컴포넌트
@@ -533,7 +530,6 @@ function Layout() {
                     </NavLink>
                     {/* <NavLink to="/trending">Trending</NavLink> */}
                     <NavLink to="/discover">Discover</NavLink>
-                    <NavLink to="/saas">Saas</NavLink>
                     <NavLink to="/board">게시판</NavLink>
                     <NavLink to="/library">Library</NavLink>
                 </nav>
@@ -565,7 +561,6 @@ export default function App() {
                     <Route path="discover" element={<DiscoverPage />} />
                     <Route path="board" element={<BoardPage />} /> {/* 없으면 제거 */}
                     <Route path="search" element={<SearchPage />} />
-                    <Route path="saas" element={<SaasPage />} />
                     <Route path="library" element={<LibraryPage />} />
                     <Route path="playlist/:id" element={<PlaylistDetail />} />
                 </Route>

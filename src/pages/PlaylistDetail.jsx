@@ -2,6 +2,8 @@
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { usePlaylistStore } from "../playlistStore";
+import { useNowPlayingStore } from "../useNowPlayingStore";
+import MiniVideoModal from "../components/MiniVideoModal";
 
 const DUMMY_TRACKS = [
     { id: "1", title: "Love wins all", artist: "아이유" },
@@ -12,19 +14,26 @@ const DUMMY_TRACKS = [
 export default function PlaylistDetail() {
     const { id } = useParams();
     const nav = useNavigate();
-    // ✅ 상태/액션
+
+    // ✅ 재생 스토어 (자동 재생바)
+    const playTrack = useNowPlayingStore((s) => s.playTrack);
+    const setPlaying = useNowPlayingStore((s) => s.setPlaying);
+
+    // ✅ 유튜브 미니모달
+    const [videoOpen, setVideoOpen] = React.useState(false);
+    const [videoItem, setVideoItem] = React.useState(null);
+
+    // ✅ 플레이리스트 스토어
     const playlists = usePlaylistStore((s) => s.playlists);
     const removeItem = usePlaylistStore((s) => s.removeItem);
     const setTracks = usePlaylistStore((s) => s.setTracks);
 
-    // ✅ URL 파라미터는 반드시 문자열로 (혹시 모를 인코딩도 복원)
-    const pid = React.useMemo(
-        () => String(decodeURIComponent(id || "")),
-        [id]
-    );
+    // ✅ URL 파라미터 문자열화
+    const pid = React.useMemo(() => String(decodeURIComponent(id || "")), [id]);
 
-    // ✅ 문자열 기준으로 찾기
+    // ✅ 대상 플레이리스트
     const pl = playlists.find((p) => String(p.id) === pid);
+    const notFound = !pl;
 
     // 최초 더미 주입 (비어있을 때만)
     const didInitRef = React.useRef(false);
@@ -32,35 +41,24 @@ export default function PlaylistDetail() {
         if (!pl || didInitRef.current) return;
         const hasItems = Array.isArray(pl.items) && pl.items.length > 0;
         const hasLegacyTracks = Array.isArray(pl.tracks) && pl.tracks.length > 0;
-        if (!hasItems && !hasLegacyTracks) setTracks(pid, DUMMY_TRACKS); // ✅ pid 문자열
+        if (!hasItems && !hasLegacyTracks) setTracks(pid, DUMMY_TRACKS);
         didInitRef.current = true;
     }, [pl, pid, setTracks]);
 
-    if (!pl) {
-        return (
-            <div style={{ padding: 12, color: "#fff" }}>
-                <h2>플레이리스트를 찾을 수 없어요</h2>
-                <button onClick={() => nav("/library")}>내 플레이리스트로 돌아가기</button>
-
-                {/* 디버그 도움: 필요 시 잠깐 켜서 확인 */}
-                {/* <pre style={{marginTop:12,opacity:.6}}>
-          {JSON.stringify({ pid, ids: (playlists||[]).map(p=>p.id) }, null, 2)}
-        </pre> */}
-            </div>
-        );
-    }
-
-    // 렌더 기준: items 전체
-    const items = Array.isArray(pl.items)
-        ? pl.items
-        : Array.isArray(pl.tracks)
-            ? pl.tracks.map((t) => ({
+    // 렌더 기준 데이터: items -> tracks/videos
+    const items = React.useMemo(() => {
+        if (!pl) return [];
+        if (Array.isArray(pl.items)) return pl.items;
+        if (Array.isArray(pl.tracks)) {
+            return pl.tracks.map((t) => ({
                 id: String(t.id),
                 kind: "track",
                 title: t.title,
                 subtitle: t.artist ?? "",
-            }))
-            : [];
+            }));
+        }
+        return [];
+    }, [pl]);
 
     const tracks = React.useMemo(
         () => items.filter((i) => (i.kind ?? "track") === "track"),
@@ -70,7 +68,33 @@ export default function PlaylistDetail() {
         () => items.filter((i) => i.kind === "video"),
         [items]
     );
-    const counts = { all: items.length, track: tracks.length, video: videos.length };
+    const counts = React.useMemo(
+        () => ({ all: items.length, track: tracks.length, video: videos.length }),
+        [items.length, tracks.length, videos.length]
+    );
+
+    // ✅ 클릭 시 동작: 영상=모달, 트랙=재생바 자동재생
+    const onClickItem = React.useCallback(
+        (it) => {
+            if (it.kind === "video") {
+                setVideoItem(it);
+                setVideoOpen(true);
+                return;
+            }
+            // 트랙 자동 재생: 사운드클라우드는 url에 soundcloud.com 포함 시 source 지정
+            const normalized = {
+                ...it,
+                kind: "track",
+                source:
+                    it.source ||
+                    (it.url?.includes?.("soundcloud.com") ? "soundcloud" : it.source),
+            };
+            // 큐는 트랙만 전달 (원치 않으면 [] 로)
+            playTrack(normalized, tracks);
+            setPlaying(true);
+        },
+        [playTrack, setPlaying, tracks]
+    );
 
     const [filter, setFilter] = React.useState("all"); // 'all' | 'track' | 'video'
     const filteredSections = React.useMemo(() => {
@@ -101,7 +125,7 @@ export default function PlaylistDetail() {
 
     const handleDelete = (itemId) => {
         if (window.confirm("이 항목을 플레이리스트에서 삭제할까요?")) {
-            removeItem(pid, itemId); // ✅ pid 문자열
+            removeItem(pid, itemId);
             setOpenMenuItemId(null);
         }
     };
@@ -139,9 +163,11 @@ export default function PlaylistDetail() {
         </div>
     );
 
-    const Row = ({ it, index }) => (
+    const Row = ({ it, index, onRowClick }) => (
         <div
             key={it.id}
+            onClick={() => onRowClick?.(it)}
+            title={it.kind === "video" ? "영상(작은 창 열기)" : "트랙(자동 재생바)"}
             style={{
                 position: "relative",
                 display: "grid",
@@ -149,6 +175,7 @@ export default function PlaylistDetail() {
                 padding: "10px 8px",
                 alignItems: "center",
                 borderBottom: "1px solid rgba(255,255,255,.06)",
+                cursor: "pointer",
             }}
         >
             <div style={{ opacity: 0.7 }}>{index + 1}</div>
@@ -169,7 +196,7 @@ export default function PlaylistDetail() {
                     aria-haspopup="menu"
                     aria-expanded={openMenuItemId === it.id}
                     onClick={(e) => {
-                        e.stopPropagation();
+                        e.stopPropagation(); // 클릭 재생과 분리
                         setOpenMenuItemId((cur) => (cur === it.id ? null : it.id));
                     }}
                     onMouseDown={(e) => e.preventDefault()}
@@ -234,91 +261,110 @@ export default function PlaylistDetail() {
         </div>
     );
 
+    // ⬇️ 렌더: early return 없이 분기
     return (
         <div style={{ display: "grid", gap: 16 }}>
-            <section
-                style={{
-                    display: "grid",
-                    gridTemplateColumns: "160px 1fr",
-                    gap: 16,
-                    alignItems: "center",
-                    padding: "12px 0 8px",
-                    borderBottom: "1px solid rgba(255,255,255,.08)",
-                }}
-            >
-                <div
-                    style={{
-                        width: 160,
-                        height: 160,
-                        borderRadius: 12,
-                        background:
-                            "linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.02))",
-                    }}
-                />
-                <div>
-                    <div style={{ opacity: 0.7, fontSize: 14, marginBottom: 6 }}>
-                        공개 플레이리스트
-                    </div>
-                    <h1 style={{ margin: 0, fontSize: 48, fontWeight: 900 }}>
-                        {pl.name}
-                    </h1>
-                    <div style={{ opacity: 0.75, marginTop: 6 }}>
-                        항목: {counts.all}개 (🎬 {counts.video} / ♪ {counts.track})
-                    </div>
-
-                    <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
-                        {[
-                            { key: "all", label: `전체 ${counts.all}` },
-                            { key: "video", label: `영상 ${counts.video}` },
-                            { key: "track", label: `트랙 ${counts.track}` },
-                        ].map((btn) => (
-                            <button
-                                key={btn.key}
-                                onClick={() => setFilter(btn.key)}
-                                style={{
-                                    padding: "6px 10px",
-                                    borderRadius: 999,
-                                    border: "1px solid rgba(255,255,255,.18)",
-                                    background:
-                                        filter === btn.key ? "rgba(255,255,255,.12)" : "transparent",
-                                    color: "#fff",
-                                    cursor: "pointer",
-                                    fontSize: 13,
-                                }}
-                            >
-                                {btn.label}
-                            </button>
-                        ))}
-                    </div>
+            {notFound ? (
+                <div style={{ padding: 12, color: "#fff" }}>
+                    <h2>플레이리스트를 찾을 수 없어요</h2>
+                    <button onClick={() => nav("/library")}>내 플레이리스트로 돌아가기</button>
                 </div>
-            </section>
-
-            {filteredSections.map(({ title, data }) => (
-                <section key={title} style={{ marginTop: 6 }}>
-                    <div
+            ) : (
+                <>
+                    <section
                         style={{
-                            position: "sticky",
-                            top: 70,
-                            background: "rgba(0,0,0,.85)",
-                            backdropFilter: "blur(6px)",
-                            zIndex: 1,
-                            padding: "6px 8px",
+                            display: "grid",
+                            gridTemplateColumns: "160px 1fr",
+                            gap: 16,
+                            alignItems: "center",
+                            padding: "12px 0 8px",
                             borderBottom: "1px solid rgba(255,255,255,.08)",
-                            fontWeight: 800,
-                            letterSpacing: 0.2,
-                            opacity: 0.9,
                         }}
                     >
-                        {title}
-                    </div>
-                    <TableHeader />
-                    {data.length === 0 ? (
-                        <div style={{ padding: "14px 8px", opacity: 0.6 }}>비어 있어요</div>
-                    ) : (
-                        data.map((it, idx) => <Row key={it.id} it={it} index={idx} />)
-                    )}
-                </section>
-            ))}
+                        <div
+                            style={{
+                                width: 160,
+                                height: 160,
+                                borderRadius: 12,
+                                background:
+                                    "linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.02))",
+                            }}
+                        />
+                        <div>
+                            <div style={{ opacity: 0.7, fontSize: 14, marginBottom: 6 }}>
+                                공개 플레이리스트
+                            </div>
+                            <h1 style={{ margin: 0, fontSize: 48, fontWeight: 900 }}>
+                                {pl.name}
+                            </h1>
+                            <div style={{ opacity: 0.75, marginTop: 6 }}>
+                                항목: {counts.all}개 (🎬 {counts.video} / ♪ {counts.track})
+                            </div>
+
+                            <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
+                                {[
+                                    { key: "all", label: `전체 ${counts.all}` },
+                                    { key: "video", label: `영상 ${counts.video}` },
+                                    { key: "track", label: `트랙 ${counts.track}` },
+                                ].map((btn) => (
+                                    <button
+                                        key={btn.key}
+                                        onClick={() => setFilter(btn.key)}
+                                        style={{
+                                            padding: "6px 10px",
+                                            borderRadius: 999,
+                                            border: "1px solid rgba(255,255,255,.18)",
+                                            background:
+                                                filter === btn.key ? "rgba(255,255,255,.12)" : "transparent",
+                                            color: "#fff",
+                                            cursor: "pointer",
+                                            fontSize: 13,
+                                        }}
+                                    >
+                                        {btn.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
+                    {filteredSections.map(({ title, data }) => (
+                        <section key={title} style={{ marginTop: 6 }}>
+                            <div
+                                style={{
+                                    position: "sticky",
+                                    top: 70,
+                                    background: "rgba(0,0,0,.85)",
+                                    backdropFilter: "blur(6px)",
+                                    zIndex: 1,
+                                    padding: "6px 8px",
+                                    borderBottom: "1px solid rgba(255,255,255,.08)",
+                                    fontWeight: 800,
+                                    letterSpacing: 0.2,
+                                    opacity: 0.9,
+                                }}
+                            >
+                                {title}
+                            </div>
+                            <TableHeader />
+                            {data.length === 0 ? (
+                                <div style={{ padding: "14px 8px", opacity: 0.6 }}>비어 있어요</div>
+                            ) : (
+                                data.map((it, idx) => (
+                                    <Row key={it.id} it={it} index={idx} onRowClick={onClickItem} />
+                                ))
+                            )}
+                        </section>
+                    ))}
+
+                    {/* 유튜브 미니모달 */}
+                    <MiniVideoModal
+                        open={videoOpen}
+                        onClose={() => setVideoOpen(false)}
+                        video={videoItem}
+                    />
+                </>
+            )}
         </div>
     );
 }
