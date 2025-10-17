@@ -40,3 +40,16 @@
 .read-the-docs {
   color: #888;
 }
+
+.tabs { display:flex; align-items:center; gap:8px; margin:8px 0 12px; }
+.tab {
+  padding: 6px 10px; border-radius: 999px; border: 1px solid var(#e5e5e5);
+  background: #111; color:#fff; font-size: 12px; cursor: pointer;
+}
+.tab.is-active { background: #fff; color:#111; border-color:#fff; }
+.badge {
+  display:inline-block; margin-left:6px; padding: 0 6px; border-radius: 8px;
+  font-size: 11px; line-height: 16px; background: rgba(0,0,0,.08);
+}
+.tab.is-active .badge { background: rgba(255,255,255,.2); }
+

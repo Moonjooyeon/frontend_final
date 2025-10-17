@@ -1,5 +1,5 @@
 // src/App.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     HashRouter,
     Routes,
@@ -17,19 +17,15 @@ import "./App.css";
 import HomePage from "./pages/home/Home.jsx";
 import DiscoverPage from "./pages/discover/Discover.jsx";
 // import SearchPage from "../pages/search/Search";
-
- import BoardPage from "./pages/board/Board.jsx";
+import BoardPage from "./pages/board/Board.jsx";
 // import Trending from "../pages/trending/Trending"; // 네가 추가했다면
 // import SaasPage from "../pages/saas/Saas";
-
-
 
 import SearchPage from "./pages/Search.jsx";
 import LibraryPage from "./pages/Library/Library.jsx";
 import PlaylistDetail from "./pages/PlaylistDetail.jsx";
-//import Trending from "./pages/Trending.jsx";
+// import Trending from "./pages/Trending.jsx";
 import SaasPage from "./pages/Saas.jsx";
-
 
 /* ─────────────────────────────────────────────
    전역 스토어 & 공용 컴포넌트
@@ -41,13 +37,227 @@ import PlayerBar from "./components/PlayerBar";
    더미 트랙 (빈 플레이리스트용 기본)
 ────────────────────────────────────────────── */
 const DUMMY_TRACKS = [
-    { id: 1, title: "Love wins all", artist: "아이유" }, // call → all로 교정
+    { id: 1, title: "Love wins all", artist: "아이유" },
     { id: 2, title: "네모의 꿈", artist: "아이유" },
     { id: 3, title: "에잇 (Prod.&Feat. SUGA)", artist: "아이유, SUGA" },
 ];
 
 /* --------------------------------------
-    Layout (사이드바/패널은 팀원 UX 유지 + 네 라우트 추가)
+   분리 컴포넌트: 사이드바 트랙/영상 탭
+   (훅 규칙 위반 방지, 플레이리스트 전환 시 key로 초기화)
+--------------------------------------- */
+function SidebarTracks({ playlist }) {
+    const [tab, setTab] = useState("all");// 'tracks' | 'videos'
+    const { removeTrack, setTracks } = usePlaylistStore();
+
+    // items 우선, 없으면 tracks를 items로 매핑
+    const rawItems = playlist.items?.length
+        ? playlist.items
+        : playlist.tracks?.map((t) => ({ ...t, kind: "track" })) ?? [];
+
+    const FALLBACK = [
+        { id: 1, title: "Love wins all", artist: "아이유", kind: "track" },
+        { id: 2, title: "네모의 꿈", artist: "아이유", kind: "track" },
+        { id: 3, title: "에잇 (Prod.&Feat. SUGA)", artist: "아이유, SUGA", kind: "track" },
+    ];
+    const items  = React.useMemo(() => (rawItems.length ? rawItems : FALLBACK), [rawItems.length, rawItems]);
+    const videos = React.useMemo(() => items.filter((i) => i.kind === "video"), [items]);
+    const tracks = React.useMemo(() => items.filter((i) => i.kind !== "video"), [items]);
+
+    // store 메서드 안전 체크
+    const store = usePlaylistStore.getState ? usePlaylistStore.getState() : null;
+    const canRemoveItem = !!store?.removeItem;
+    const canRemoveVideo = !!store?.removeVideo;
+
+    const onDelete = (it) => {
+        if (playlist.items?.length && store) {
+            if (canRemoveItem) return store.removeItem(playlist.id, it.id);
+            if (it.kind === "track" && typeof removeTrack === "function") {
+                return removeTrack(playlist.id, it.id);
+            }
+            if (it.kind === "video" && canRemoveVideo) {
+                return store.removeVideo(playlist.id, it.id);
+            }
+            return; // 삭제 미구현
+        }
+        // 예전 tracks 전용(또는 더미)
+        if (!playlist.tracks?.length) {
+            const seeded = FALLBACK.filter((x) => x.id !== it.id);
+            setTracks(playlist.id, seeded);
+        } else if (it.kind !== "video" && typeof removeTrack === "function") {
+            removeTrack(playlist.id, it.id);
+        }
+    };
+
+    const list = tab === "all" ? items : (tab === "tracks" ? tracks : videos);
+
+    return (
+        <>
+            <div className="tracks-head">
+                <strong className="tracks-title">{playlist.name}</strong>
+                <span className="tracks-count">총 {tracks.length + videos.length}개</span>
+            </div>
+
+            <div className="tabs">
+                <button
+                    className={`tab ${tab === "all" ? "is-active" : ""}`}
+                    onClick={() => setTab("all")}
+                >
+                    전체 <span className="badge">{items.length}</span>
+                </button>
+                <button
+                    className={`tab ${tab === "tracks" ? "is-active" : ""}`}
+                    onClick={() => setTab("tracks")}
+                    style={{ marginLeft: 8 }}
+                >
+                    트랙 <span className="badge">{tracks.length}</span>
+                </button>
+                <button
+                    className={`tab ${tab === "videos" ? "is-active" : ""}`}
+                    onClick={() => setTab("videos")}
+                    style={{ marginLeft: 8 }}
+                >
+                    영상 <span className="badge">{videos.length}</span>
+                </button>
+            </div>
+
+            {list.length > 0 ? (
+                <ul className="track-list">
+                    {list.map((it) => (
+                        <li key={`${it.kind}-${it.id}`} className="track-item">
+                            <div className="ti-title">{it.title}</div>
+                            <div className="ti-artist">
+                                {it.kind === "video"
+                                    ? it.channel || it.subtitle || ""
+                                    : it.artist || it.subtitle || ""}
+                            </div>
+                            <button
+                                className="mini-del"
+                                onClick={() => onDelete(it)}
+                                style={{ marginLeft: "auto" }}
+                                disabled={
+                                    playlist.items?.length &&
+                                    !canRemoveItem &&
+                                    (it.kind === "video"
+                                        ? !canRemoveVideo
+                                        : typeof removeTrack !== "function")
+                                }
+                                title={
+                                    playlist.items?.length &&
+                                    !canRemoveItem &&
+                                    (it.kind === "video"
+                                        ? !canRemoveVideo
+                                        : typeof removeTrack !== "function")
+                                        ? "삭제 기능 미구현"
+                                        : "삭제"
+                                }
+                            >
+                                삭제
+                            </button>
+                        </li>
+                    ))}
+                </ul>
+            ) : (
+                <div className="empty-hint">
+                    {tab === "tracks" ? "트랙이 없습니다." : "영상이 없습니다."}
+                </div>
+            )}
+        </>
+    );
+}
+
+/* --------------------------------------
+   PlaylistPanel (팀원 구현 유지, onSelect 지원)
+--------------------------------------- */
+function PlaylistPanel({ open, onClose, onSelect }) {
+    const { playlists, addPlaylist, deletePlaylist, updatePlaylist } =
+        usePlaylistStore();
+    const [editingId, setEditingId] = React.useState(null);
+    const [draftName, setDraftName] = React.useState("");
+
+    const commitName = (p) => {
+        const next = draftName.trim();
+        if (next && next !== p.name) updatePlaylist(p.id, next);
+        setEditingId(null);
+    };
+
+    if (!open) return null;
+
+    const handleCreate = () => {
+        const base = "내 플레이리스트";
+        const n = playlists.filter((p) => p.name.startsWith(base)).length + 1;
+        addPlaylist(`${base} ${n}`);
+    };
+
+    return (
+        <div className="pl-panel">
+            <div className="pl-panel-head">
+                <strong>플레이리스트</strong>
+                <button className="icon-btn" onClick={onClose}>
+                    ✕
+                </button>
+            </div>
+
+            {playlists.length === 0 ? (
+                <div className="pl-empty">
+                    <div className="title">아직 플레이리스트가 없어요</div>
+                    <div className="sub">“새 플레이리스트 만들기ˮ를 눌러 시작해 보세요.</div>
+                    <button className="card-cta" onClick={handleCreate}>
+                        새 플레이리스트 만들기
+                    </button>
+                </div>
+            ) : (
+                <ul className="pl-list">
+                    {playlists.map((p) => (
+                        <li key={p.id} className="pl-item">
+                            <div className="pl-meta">
+                                {editingId === p.id ? (
+                                    <input
+                                        autoFocus
+                                        className="pl-edit"
+                                        value={draftName}
+                                        onChange={(e) => setDraftName(e.target.value)}
+                                        onBlur={() => commitName(p)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") commitName(p);
+                                            if (e.key === "Escape") setEditingId(null);
+                                        }}
+                                    />
+                                ) : (
+                                    <div
+                                        className="name"
+                                        onClick={() => onSelect?.(p.id)}
+                                        onDoubleClick={() => {
+                                            setDraftName(p.name);
+                                            setEditingId(p.id);
+                                        }}
+                                    >
+                                        {p.name}
+                                    </div>
+                                )}
+                                <div className="sub">{p.tracks?.length ?? 0}곡</div>
+                            </div>
+                            <button className="pl-del" onClick={() => deletePlaylist(p.id)}>
+                                삭제
+                            </button>
+                        </li>
+                    ))}
+                </ul>
+            )}
+
+            {playlists.length > 0 && (
+                <div className="pl-panel-foot">
+                    <button className="card-cta" onClick={handleCreate}>
+                        새 플레이리스트 만들기
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+}
+
+/* --------------------------------------
+   Layout (사이드바/패널은 팀원 UX 유지 + 네 라우트 추가)
 --------------------------------------- */
 function Layout() {
     const navigate = useNavigate();
@@ -243,7 +453,29 @@ function Layout() {
                                                     {p.name}
                                                 </div>
                                             )}
-                                            <div className="mini-sub">{p.tracks?.length ?? 0}곡</div>
+                                            <div className="mini-sub">
+                                                {(() => {
+                                                    const items = Array.isArray(p.items) ? p.items : (p.tracks ?? []);
+                                                    const trackCount = items.filter(i => i.kind !== "video").length;
+                                                    const videoCount = items.filter(i => i.kind === "video").length;
+
+                                                    if (trackCount > 0 && videoCount > 0) {
+                                                        // 둘 다 있는 경우
+                                                        return `${trackCount}곡 | ${videoCount}개`;
+                                                    } else if (trackCount > 0) {
+                                                        // 트랙만
+                                                        return `${trackCount}곡`;
+                                                    } else if (videoCount > 0) {
+                                                        // 영상만
+                                                        return `${videoCount}개`;
+                                                    } else {
+                                                        // 비어 있음
+                                                        return "0곡";
+                                                    }
+                                                })()}
+                                            </div>
+
+
                                         </div>
                                         <div className="mini-actions">
                                             <button
@@ -274,39 +506,11 @@ function Layout() {
                     </section>
                 )}
 
-                {/* 트랙 모드 */}
+                {/* 트랙 모드 (탭: 트랙 / 영상) */}
                 {sidebarMode === "tracks" && selectedPl && (
                     <section className="sidebar-tracks">
-                        <div className="tracks-head">
-                            <strong className="tracks-title">{selectedPl.name}</strong>
-                            <span className="tracks-count">
-                {selectedPl.tracks?.length ?? DUMMY_TRACKS.length}곡
-              </span>
-                        </div>
-                        <ul className="track-list">
-                            {(selectedPl.tracks?.length ? selectedPl.tracks : DUMMY_TRACKS).map(
-                                (t) => (
-                                    <li key={t.id} className="track-item">
-                                        <div className="ti-title">{t.title}</div>
-                                        <div className="ti-artist">{t.artist}</div>
-                                        <button
-                                            className="mini-del"
-                                            onClick={() => {
-                                                if (!selectedPl.tracks?.length) {
-                                                    const seeded = DUMMY_TRACKS.filter((x) => x.id !== t.id);
-                                                    setTracks(selectedPl.id, seeded);
-                                                } else {
-                                                    removeTrack(selectedPl.id, t.id);
-                                                }
-                                            }}
-                                            style={{ marginLeft: "auto" }}
-                                        >
-                                            삭제
-                                        </button>
-                                    </li>
-                                )
-                            )}
-                        </ul>
+                        {/* key로 선택 변경 시 탭 초기화 */}
+                        <SidebarTracks key={selectedPl.id} playlist={selectedPl} />
                     </section>
                 )}
             </aside>
@@ -324,8 +528,10 @@ function Layout() {
             {/* 본문 */}
             <main className="app-main">
                 <nav className="app-nav" style={{ display: "flex", gap: 12 }}>
-                    <NavLink to="/" end>Home</NavLink>
-                    {/*<NavLink to="/trending">Trending</NavLink>*/}
+                    <NavLink to="/" end>
+                        Home
+                    </NavLink>
+                    {/* <NavLink to="/trending">Trending</NavLink> */}
                     <NavLink to="/discover">Discover</NavLink>
                     <NavLink to="/saas">Saas</NavLink>
                     <NavLink to="/board">게시판</NavLink>
@@ -347,95 +553,7 @@ function Layout() {
 }
 
 /* --------------------------------------
-    PlaylistPanel (팀원 구현 유지, onSelect 지원)
---------------------------------------- */
-function PlaylistPanel({ open, onClose, onSelect }) {
-    const { playlists, addPlaylist, deletePlaylist, updatePlaylist } =
-        usePlaylistStore();
-    const [editingId, setEditingId] = React.useState(null);
-    const [draftName, setDraftName] = React.useState("");
-
-    const commitName = (p) => {
-        const next = draftName.trim();
-        if (next && next !== p.name) updatePlaylist(p.id, next);
-        setEditingId(null);
-    };
-
-    if (!open) return null;
-
-    const handleCreate = () => {
-        const base = "내 플레이리스트";
-        const n = playlists.filter((p) => p.name.startsWith(base)).length + 1;
-        addPlaylist(`${base} ${n}`);
-    };
-
-    return (
-        <div className="pl-panel">
-            <div className="pl-panel-head">
-                <strong>플레이리스트</strong>
-                <button className="icon-btn" onClick={onClose}>✕</button>
-            </div>
-
-            {playlists.length === 0 ? (
-                <div className="pl-empty">
-                    <div className="title">아직 플레이리스트가 없어요</div>
-                    <div className="sub">“새 플레이리스트 만들기ˮ를 눌러 시작해 보세요.</div>
-                    <button className="card-cta" onClick={handleCreate}>
-                        새 플레이리스트 만들기
-                    </button>
-                </div>
-            ) : (
-                <ul className="pl-list">
-                    {playlists.map((p) => (
-                        <li key={p.id} className="pl-item">
-                            <div className="pl-meta">
-                                {editingId === p.id ? (
-                                    <input
-                                        autoFocus
-                                        className="pl-edit"
-                                        value={draftName}
-                                        onChange={(e) => setDraftName(e.target.value)}
-                                        onBlur={() => commitName(p)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter") commitName(p);
-                                            if (e.key === "Escape") setEditingId(null);
-                                        }}
-                                    />
-                                ) : (
-                                    <div
-                                        className="name"
-                                        onClick={() => onSelect?.(p.id)}
-                                        onDoubleClick={() => {
-                                            setDraftName(p.name);
-                                            setEditingId(p.id);
-                                        }}
-                                    >
-                                        {p.name}
-                                    </div>
-                                )}
-                                <div className="sub">{p.tracks?.length ?? 0}곡</div>
-                            </div>
-                            <button className="pl-del" onClick={() => deletePlaylist(p.id)}>
-                                삭제
-                            </button>
-                        </li>
-                    ))}
-                </ul>
-            )}
-
-            {playlists.length > 0 && (
-                <div className="pl-panel-foot">
-                    <button className="card-cta" onClick={handleCreate}>
-                        새 플레이리스트 만들기
-                    </button>
-                </div>
-            )}
-        </div>
-    );
-}
-
-/* --------------------------------------
-    라우터
+   라우터
 --------------------------------------- */
 export default function App() {
     return (
@@ -443,9 +561,9 @@ export default function App() {
             <Routes>
                 <Route element={<Layout />}>
                     <Route index element={<HomePage />} />
-                    {/* <Route path="trending" element={<Trending />} />*/}
+                    {/* <Route path="trending" element={<Trending />} /> */}
                     <Route path="discover" element={<DiscoverPage />} />
-                    <Route path="board" element={<BoardPage />} />      {/* 없으면 제거 */}
+                    <Route path="board" element={<BoardPage />} /> {/* 없으면 제거 */}
                     <Route path="search" element={<SearchPage />} />
                     <Route path="saas" element={<SaasPage />} />
                     <Route path="library" element={<LibraryPage />} />
