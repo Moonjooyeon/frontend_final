@@ -33,7 +33,7 @@
 
 <hr />
 
-<h2>🚀 구현한 핵심 기능</h2>
+<h2> 구현한 핵심 기능</h2>
 <ul>
   <li><b>CRUD</b>: Playlist / Board 생성 · 조회 · 수정 · 삭제 기능 완비</li>
   <li><b>SPA (React Router)</b>: Home (Main), Discover, Board, Search</li>
@@ -44,9 +44,9 @@
 
 <hr />
 
-<h2>🧩 사용 기술 (Tech Stack)</h2>
+<h2> 사용 기술 (Tech Stack)</h2>
 
-<h3>🎨 Frontend</h3>
+<h3> Frontend</h3>
 <ul>
   <li><b>React 19 + Vite</b> — 최신 React 기반 SPA 프레임워크</li>
   <li><b>JavaScript (ES2023)</b> — 최신 문법 기반의 가벼운 개발 환경</li>
@@ -56,7 +56,7 @@
   <li><b>CSS Modules / Tailwind CSS</b> — 반응형 스타일링</li>
 </ul>
 
-<h3>⚙️ Backend</h3>
+<h3> Backend</h3>
 <ul>
   <li><b>Spring Boot 3.x</b> — REST API 서버 및 비즈니스 로직 구현</li>
   <li><b>WebClient (Spring Reactive)</b> — SoundCloud API 프록시 호출</li>
@@ -64,15 +64,13 @@
   <li><b>Spring Security</b> — 인증 및 접근 제어</li>
 </ul>
 
-<h3>🌐 External API & SDK</h3>
+<h3> External API & SDK</h3>
 <ul>
   <li><b>SoundCloud Public API (v2)</b> — 트렌딩 및 검색 데이터 연동</li>
   <li><b>Ngrok</b> — 로컬 서버 외부 공개 및 테스트용 터널링</li>
 </ul>
 
 <hr />
-## 각자 맡은 역할:
-이건호, 성건우, 문주연
 
 
 ## 전체적인 시스템 구성도 
