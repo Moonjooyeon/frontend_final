@@ -1,0 +1,55 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.6'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+description = 'React Api'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // --- MVC 서버 ---
+    implementation 'org.springframework.boot:spring-boot-starter-web'        // ✅ 서블릿 기반 (Tomcat)
+    implementation 'org.springframework.boot:spring-boot-starter-security'   // ✅ HttpSecurity 사용
+
+    // --- OAuth2 (필요할 때만 유지) ---
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+
+    // --- WebClient만 쓰기 위해 WebFlux 의존성 추가 (서버 X, 클라이언트 O) ---
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'    // ✅ WebClient 용도
+    //   ↑ 중복 줄 제거! (지금 파일엔 두 번 들어가 있었음)
+
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'io.projectreactor:reactor-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
