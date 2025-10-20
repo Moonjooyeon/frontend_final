@@ -86,8 +86,9 @@
 <img width="8369" height="5386" alt="Image" src="https://github.com/user-attachments/assets/3b9e05ae-beaf-4c93-9b22-e3aae76d1c34" />
 
 ### API 명세서
-
-[api 명세서.pdf](https://github.com/user-attachments/files/22997552/api.pdf)
+![Image](https://github.com/user-attachments/assets/b8f05df7-01b8-44a1-8f5b-5f27f59efd3f)
+![Image](https://github.com/user-attachments/assets/556f3b4e-2fe7-4d4e-a90a-73ede514a4b1)
+![Image](https://github.com/user-attachments/assets/927a126b-a19a-4c58-a96c-a259857c6938)
 
 
 
