@@ -28,7 +28,12 @@ export function useInfiniteRow(fetcher) {
     const prevCursorRef = useRef(null);
 
     const appendPage = useCallback((page) => {
-        const coll = Array.isArray(page?.collection) ? page.collection : [];
+        // items / collection / result 다 받아주기
+        const coll =
+            (Array.isArray(page?.items) && page.items) ||
+            (Array.isArray(page?.collection) && page.collection) ||
+            (Array.isArray(page?.result) && page.result) ||
+            [];
 
         const deduped = [];
         for (const r of coll) {
@@ -41,8 +46,16 @@ export function useInfiniteRow(fetcher) {
         if (deduped.length > 0) {
             setItems((prev) => prev.concat(deduped));
         }
+        console.log('[ROW append]', { added: deduped.length });
 
-        const next = page?.next_href || null;
+        // next 우선순위: next → cursor → next_href
+        const next =
+            page?.next ??
+            page?.cursor ??
+            page?.next_href ??
+            page?.nextHref ??
+            null;
+
         if (!next || next === prevCursorRef.current) {
             doneRef.current = true;
         }
@@ -57,6 +70,11 @@ export function useInfiniteRow(fetcher) {
         setError(null);
         try {
             const page = await fetcher(cursor);
+            console.log('[ROW page]', {
+                items: Array.isArray(page?.items) ? page.items.length : null,
+                collection: Array.isArray(page?.collection) ? page.collection.length : null,
+                next: page?.next ?? page?.cursor ?? page?.next_href ?? page?.nextHref ?? null,
+            });
             appendPage(page);
         } catch (e) {
             setError(e instanceof Error ? e : new Error("load failed"));

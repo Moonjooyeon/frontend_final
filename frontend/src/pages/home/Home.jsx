@@ -26,39 +26,36 @@ function normalizeCursorForQS(cursor) {
   }
   return raw;
 }
+function normalizeSC(resp) {
+  const rows = resp?.collection ?? resp?.result ?? resp?.items ?? [];
+  const items = rows.map((r) => r?.track ?? r);       // charts/search 모두 커버
+  const next  = resp?.next_href ?? resp?.next ?? resp?.cursor ?? null;
+  return { items, next };
+}
 
 async function fetchTrending(cursor) {
-  const qs = cursor
-      ? new URLSearchParams({ cursor: normalizeCursorForQS(cursor) }).toString()
-      : new URLSearchParams({ genre: "all-music", limit: "20" }).toString();
-
-  const url = `/api/charts/trending?${qs}`;
-  const res = await fetch(url);
-
+  const qs = new URLSearchParams({ genre: "all-music", limit: "20" });
+  if (cursor && cursor !== "undefined" && cursor !== "null") {
+    qs.set("cursor", cursor); // 그대로 전달 (URLSearchParams가 필요한 인코딩 처리)
+  }
+  const res = await fetch(`/api/charts/trending?${qs.toString()}`);
   if (!res.ok) {
-    if (cursor && res.status === 500) {
-      const retry = await fetch(
-          `/api/charts/trending?${new URLSearchParams({
-            genre: "all-music",
-            limit: "20",
-          }).toString()}`
-      );
-      if (!retry.ok) {
-        const t = await retry.text().catch(() => "");
-        console.error("Trending RESET retry failed:", retry.status, t);
-        throw new Error("HTTP " + retry.status);
-      }
-      return retry.json();
-    }
-
     const t = await res.text().catch(() => "");
     console.error("Trending API error:", res.status, t);
     throw new Error("HTTP " + res.status);
   }
+  const data = await res.json();
+  const { items, next } = normalizeSC(data);
 
-  return res.json();
+  // ⬇️ 여러 훅 케이스를 모두 만족시키기 위해 넉넉히 반환
+  return {
+    items,               // useInfiniteRow가 items를 바라보는 경우
+    collection: items,   // collection을 기대하는 경우
+    next,                // next를 기대하는 경우
+    cursor: next,            // cursor를 기대하는 경우
+    raw: data,           // 디버깅용
+  };
 }
-
 // 안정적인 key 생성
 const idOf = (raw) => {
   const x = raw?.track || raw;
@@ -222,7 +219,7 @@ function TrendingRow() {
   const playTrack = useNowPlayingStore((s) => s.playTrack);
   const [scrollEl, setScrollEl] = useState(null);
 
-  const tracks = useMemo(() => items.map((x) => x.track || x), [items]);
+  const tracks = useMemo(() => items, [items]);
   const queue = useMemo(() => tracks.map(toUiTrack).filter(Boolean), [tracks]);
 
   const onPlayIndex = (idx) => {
@@ -263,7 +260,9 @@ function TrendingRow() {
             ▶
           </button>
 
-          <div className="trendingX-row" ref={rowRef}>
+          <div className="trendingX-row"
+               ref={(el) => { rowRef.current = el; setScrollEl(el); }}
+          >
             <ul className="trendingX-list">
               {tracks.map((t, idx) => {
                 const k = idOf(t) ?? `fallback-${idx}`;

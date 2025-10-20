@@ -6,13 +6,18 @@ import { useNowPlayingStore } from "../useNowPlayingStore";
 import { toUiTrack } from "../lib/trackNormalize";
 
 async function fetchTrending(cursor) {
-    const params = cursor
-        ? `cursor=${encodeURIComponent(cursor)}`
-        : `genre=all-music&limit=20`;
-    const res = await fetch(`/api/charts/trending?${params}`);
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    return res.json();
+  const params = new URLSearchParams({
+    genre: "all-music",
+    limit: "20",
+  });
+
+  if (cursor) params.set("cursor", cursor); // 값 있을 때만 추가
+
+  const res = await fetch(`/api/charts/trending?${params.toString()}`);
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  return res.json();
 }
+
 
 
 export default function Trending() {
