@@ -72,6 +72,22 @@
 
 <hr />
 
+<h2> 실행 방법</h2>
+
+<h3>Frontend</h3>
+<pre><code>cd frontend
+npm install
+npm run dev
+</code></pre>
+
+<h3>Backend</h3>
+<pre><code>cd backend
+./gradlew bootRun
+</code></pre>
+
+
+
+
 
 ## 전체적인 시스템 구성도 
 
