@@ -110,6 +110,28 @@ npm run dev
 사용자 진입 - SC 트렌딩 호출 + YT 인기(음악) 호출 - 응답 정규화(MediaItem)·카드 렌더 - 카드 클릭 -  재생(SC 위젯 / YT iframe) 또는 플리에 추가(로컬)
 </code></pre>
 
+### 구현상세 : 
+#### 사용 기술
+* **Frontend**: React, Zustand (전역 상태 관리)
+* **Backend**: Spring Boot
+* **APIs**: SoundCloud API, YouTube Data v3
+
+#### 핵심 구현 방식
+* **트렌딩 및 무한 스크롤**:
+    * 최초 진입 시 SoundCloud 트렌딩 데이터를 호출.
+    * 응답받은 `next_href` 값을 `nextCursor`로 저장하여 다음 페이지를 관리.
+    * 가로 스크롤 시, 오른쪽 끝에 위치한 'Sentinel' 요소가 감지되면 `nextCursor`를 기반으로 다음 페이지를 로드하는 **무한 스크롤**을 구현.
+
+* **음악 재생 (NowPlaying)**:
+    * 음악 카드 클릭 시, Zustand의 `useNowPlayingStore`를 사용합니다.
+    * `playTrack(item, queue)` 함수를 호출하여 선택한 트랙과 현재 큐(queue)를 전역 상태로 업데이트하고, 즉시 하단 재생바를 활성화합니다.
+
+* **플레이리스트 (Playlist)**:
+    * `AddToPlaylistButton` 클릭 시 `usePlaylistStore`의 상태를 업데이트하여, 사용자가 선택한 플레이리스트에 현재 곡을 추가합니다.
+
+* **검색**:
+    * 상단 검색창을 통해 입력된 키워드로 YouTube 및 SoundCloud 데이터를 통합 검색합니다.
+
 <h3>Discover</h3>
 <pre><code>
 장르/태그 선택 - SC 장르 트렌딩 호출과 정규화·Row 무한 스크롤 렌더
@@ -119,6 +141,31 @@ npm run dev
 <pre><code>
 사용자 입력 -(GET) YouTube + SoundCloud API - 결과 - UI - 재생/추가
 </code></pre>
+
+### 구현상세 : 
+#### 사용 기술
+* **Frontend**: React, Zustand (전역 상태 관리)
+* **Backend**: Spring Boot (API Proxy)
+* **APIs**: SoundCloud API, YouTube Data v3
+
+#### API 호출 흐름
+
+* **SoundCloud (백엔드 프록시)**:
+    * `Frontend - Backend (Spring Boot) - SoundCloud API`
+    * **Endpoint**: `GET /api/sc/search?q=<keyword>&limit=20`
+    * **이유**: SoundCloud는 API Key 노출에 민감하고 CORS 정책 이슈가 발생할 수 있어, 백엔드 서버를 프록시(Proxy)로 사용해 안정적으로 데이터를 호출.
+
+* **YouTube (프론트엔드 직접 호출)**:
+    * `Frontend - YouTube Data v3 API`
+    * **이유**: YouTube API는 브라우저 키 제한 등 클라이언트 측 직접 호출을 공식적으로 지원하므로, 불필요한 서버 트래픽을 줄이기 위해 프론트에서 직접 호출.
+
+#### 핵심 구현 방식
+* **병렬 데이터 호출**:
+    * 사용자가 검색을 실행하면, 백엔드 프록시(SoundCloud)와 YouTube API로의 요청이 **병렬(Parallel)로 동시에 실행**되어 검색 응답 시간을 최소화.
+
+* **재생 및 플레이리스트 추가**:
+    * **즉시 재생**: 아이템 클릭 시 `useNowPlayingStore.playTrack(item, results)`를 호출, 현재 검색 결과(`results`)를 통째로 재생 목록 큐로 설정.
+    * **플리 추가**: `usePlaylistStore`의 액션을 호출하며, 상태 업데이트 시 **함수형 업데이트**를 사용해 이전 상태(prev)를 기반으로 안전하게 새 항목을 추가.
 
 <h3>Board</h3>
 <pre><code>
