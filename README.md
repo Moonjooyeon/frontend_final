@@ -97,23 +97,50 @@ npm run dev
 <pre><code>cd backend
 ./gradlew bootRun
 </code></pre>
-
-
-
-
+<hr />
 
 ## 전체적인 시스템 구성도 
 
 <img width="2175" height="1738" alt="Image" src="https://github.com/user-attachments/assets/e8872c75-2b7e-44dc-af04-39893f51681e" />
 <img width="1328" height="736" alt="Image" src="https://github.com/user-attachments/assets/dac13f92-e3c8-40ef-89b1-1a6e61820d62" />
 
+<h2>주요 흐름</h2>
+<h3>Home</h3>
+<pre><code>
+사용자 진입 - SC 트렌딩 호출 + YT 인기(음악) 호출 - 응답 정규화(MediaItem)·카드 렌더 - 카드 클릭 -  재생(SC 위젯 / YT iframe) 또는 플리에 추가(로컬)
+</code></pre>
+
+<h3>Discover</h3>
+<pre><code>
+장르/태그 선택 - SC 장르 트렌딩 호출과 정규화·Row 무한 스크롤 렌더
+</code></pre>
+
+<h3>Search</h3>
+<pre><code>
+사용자 입력 -(GET) YouTube + SoundCloud API - 결과 - UI - 재생/추가
+</code></pre>
+
+<h3>Board</h3>
+<pre><code>
+목록 로드(LocalStorage/IndexedDB) -  글 작성/수정/삭제 -  변경 즉시 화면 갱신
+</code></pre>
+
+<h3>Library</h3>
+<pre><code>
+플리 목록 로드(LocalStorage 복원) - 플리 생성/이름변경/삭제, 트랙 추가/제거/정렬 -  변경 즉시 LocalStorage 저장 - 항목 클릭 - 재생
+</code></pre>
+
+<hr />
+
 ### 백엔드 다이어그램
 
 <img width="1880" height="1050" alt="Image" src="https://github.com/user-attachments/assets/0d0a84bf-38b5-4d25-a622-36e855bca443" />
+<hr />
 
 ###  프론트앤드 다이어그램
 
 <img width="8369" height="5386" alt="Image" src="https://github.com/user-attachments/assets/3b9e05ae-beaf-4c93-9b22-e3aae76d1c34" />
+<hr />
 
 ### API 명세서
 ![Image](https://github.com/user-attachments/assets/b8f05df7-01b8-44a1-8f5b-5f27f59efd3f)
