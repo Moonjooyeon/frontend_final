@@ -122,7 +122,7 @@ npm run dev
 
 <h3>Board</h3>
 <pre><code>
-목록 로드(LocalStorage/IndexedDB) -  글 작성/수정/삭제 -  변경 즉시 화면 갱신
+로컬 데이터 로드(LocalStorage/IndexedDB) - 목록 렌더(제목만) - 입력(제목≤20 필수·내용≤200 선택, Enter 제출) - 등록 성공 시 상단 추가+자동 펼침/알림 - 수정(펼친 상태 폼 전환)·삭제(대상만 제거) - 자동증가 ID 부여 - 즉시 화면/로컬 동기화
 </code></pre>
 
 <h3>Library</h3>
