@@ -111,11 +111,6 @@ npm run dev
 </code></pre>
 
 ### 구현상세 : 
-#### 사용 기술
-* **Frontend**: React, Zustand (전역 상태 관리)
-* **Backend**: Spring Boot
-* **APIs**: SoundCloud API, YouTube Data v3
-
 #### 핵심 구현 방식
 * **트렌딩 및 무한 스크롤**:
     * 최초 진입 시 SoundCloud 트렌딩 데이터를 호출.
@@ -143,13 +138,7 @@ npm run dev
 </code></pre>
 
 ### 구현상세 : 
-#### 사용 기술
-* **Frontend**: React, Zustand (전역 상태 관리)
-* **Backend**: Spring Boot (API Proxy)
-* **APIs**: SoundCloud API, YouTube Data v3
-
 #### API 호출 흐름
-
 * **SoundCloud (백엔드 프록시)**:
     * `Frontend - Backend (Spring Boot) - SoundCloud API`
     * **Endpoint**: `GET /api/sc/search?q=<keyword>&limit=20`
@@ -173,9 +162,6 @@ npm run dev
 </code></pre>
 
 ### 구현상세 : 
-#### 사용 기술
-* **코드 스플리팅**: `React.lazy` 및 `<Suspense />`
-
 #### 1. 성능 최적화 (Code Splitting)
 * 이 게시판 컴포넌트는 사용자가 해당 기능 페이지에 진입할 때까지 로드되지 않습니다.
 * `React.lazy()`를 사용해 컴포넌트를 **동적 임포트(Dynamic Import)**하여 메인 번들(bundle)의 크기를 줄였습니다.
@@ -207,16 +193,7 @@ npm run dev
 </code></pre>
 
 #### 사용 기술
-* **Frontend**: React
-* **Zustand (전역 상태 관리)**
-* **데이터 영속성**: Zustand `persist` 미들웨어 (LocalStorage 연동)
-
-#### 1. 데이터 영속성 (Persistence)
-* 사용자가 생성/수정한 모든 플레이리스트 데이터는 브라우저가 종료되어도 유지되어야 합니다.
-* Zustand의 `persist` 미들웨어를 사용하여 `usePlaylistStore`의 상태를 **LocalStorage와 자동으로 동기화**했습니다.
-* 이를 통해 별도의 백엔드 DB 없이도 사용자 맞춤형 데이터를 브라우저에 저장하고 관리할 수 있습니다.
-
-#### 2. 핵심 구현 방식
+#### 핵심 구현 방식
 * **Create (목록 및 생성)**:
     * `usePlaylistStore`에 저장된 `playlists` 배열을 `map()`으로 순회하여 플레이리스트 카드 목록을 렌더링합니다.
     * '새 플레이리스트 만들기' 클릭 시, 입력 모달을 띄우거나 "내 플레이리스트 1" 과 같은 자동 생성 이름으로 새 플레이리스트 객체를 스토어에 추가합니다.
