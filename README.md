@@ -46,7 +46,12 @@
 
 <h2> 사용 기술 (Tech Stack)</h2>
 
-<h3> Frontend</h3>
+<h3>
+  Frontend&nbsp;
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" width="28" height="28" alt="JavaScript" />
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" width="28" height="28" alt="React" />
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vite/vite-original.svg" width="28" height="28" alt="Vite" />
+</h3>
 <ul>
   <li><b>React 19 + Vite</b> — 최신 React 기반 SPA 프레임워크</li>
   <li><b>JavaScript (ES2023)</b> — 최신 문법 기반의 가벼운 개발 환경</li>
@@ -56,7 +61,12 @@
   <li><b>CSS Modules / Tailwind CSS</b> — 반응형 스타일링</li>
 </ul>
 
-<h3> Backend</h3>
+<h3>
+  Backend&nbsp;
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/spring/spring-original.svg" width="24" height="24" alt="Spring Boot" />
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg" width="24" height="24" alt="MySQL" />
+</h3>
+
 <ul>
   <li><b>Spring Boot 3.x</b> — REST API 서버 및 비즈니스 로직 구현</li>
   <li><b>WebClient (Spring Reactive)</b> — SoundCloud API 프록시 호출</li>
@@ -64,7 +74,10 @@
   <li><b>Spring Security</b> — 인증 및 접근 제어</li>
 </ul>
 
-<h3> External API & SDK</h3>
+<h3>
+  External API & SDK&nbsp;
+  <img src="https://cdn-icons-png.flaticon.com/512/5968/5968842.png" width="24" height="24" alt="SoundCloud" />
+</h3>
 <ul>
   <li><b>SoundCloud Public API (v2)</b> — 트렌딩 및 검색 데이터 연동</li>
   <li><b>Ngrok</b> — 로컬 서버 외부 공개 및 테스트용 터널링</li>
