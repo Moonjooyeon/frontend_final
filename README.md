@@ -105,7 +105,7 @@ npm run dev
 ## 전체적인 시스템 구성도 
 
 <img width="2175" height="1738" alt="Image" src="https://github.com/user-attachments/assets/e8872c75-2b7e-44dc-af04-39893f51681e" />
-<img width="1498" height="890" alt="Image" src="https://github.com/user-attachments/assets/528f6d8e-e385-432b-9006-fbaacb147029" />
+<img width="1328" height="736" alt="Image" src="https://github.com/user-attachments/assets/dac13f92-e3c8-40ef-89b1-1a6e61820d62" />
 
 ### 백엔드 다이어그램
 
