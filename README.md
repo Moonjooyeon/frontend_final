@@ -106,6 +106,9 @@ npm run dev
 
 <h2>주요 흐름</h2>
 <h3>Home</h3>
+
+![Image](https://github.com/user-attachments/assets/a7fe0b0d-4aea-44e2-aa2e-704148b861b9)
+
 <pre><code>
 사용자 진입 - SC 트렌딩 호출 + YT 인기(음악) 호출 - 응답 정규화(MediaItem)·카드 렌더 - 카드 클릭 -  재생(SC 위젯 / YT iframe) 또는 플리에 추가(로컬)
 </code></pre>
@@ -124,6 +127,9 @@ npm run dev
     * 상단 검색창을 통해 입력된 키워드로 YouTube 및 SoundCloud 데이터를 통합 검색.
 
 <h3>Discover</h3>
+
+![Image](https://github.com/user-attachments/assets/910849c4-1ce2-4a0a-a701-41257bf3f254)
+
 <pre><code>
 탐색 탭 전환- SC 장르 트렌딩 호출과 정규화·Row 무한 스크롤 렌더
 </code></pre>
@@ -133,6 +139,9 @@ npm run dev
 *  **렌더링**: 아이템를 그리드 카드로 표시(썸네일/제목/아티스트) + 에러/로딩 상태 처리
 
 <h3>Search</h3>
+
+![Image](https://github.com/user-attachments/assets/25c33323-4ade-40c7-ae95-32abd7a7326c)
+
 <pre><code>
 사용자 입력 -(GET) YouTube + SoundCloud API - 결과 - UI - 재생/추가
 </code></pre>
@@ -150,6 +159,9 @@ npm run dev
     * **플리 추가**: `usePlaylistStore`의 액션을 호출하며, 상태 업데이트 시 **함수형 업데이트**를 사용해 새 항목을 추가.
 
 <h3>Board</h3>
+
+![Image](https://github.com/user-attachments/assets/1a6b8ea1-53bd-44b0-8703-ed41392a9bd0)
+
 <pre><code>
 로컬 데이터 로드(LocalStorage/IndexedDB) - 목록 렌더(제목만) - 입력(제목≤20 필수·내용≤200 선택, Enter 제출) - 등록 성공 시 상단 추가+자동 펼침/알림 - 수정(펼친 상태 폼 전환)·삭제(대상만 제거) - 자동증가 ID 부여 - 즉시 화면/로컬 동기화
 </code></pre>
@@ -174,6 +186,9 @@ npm run dev
 
 
 <h3>Library</h3>
+
+![Image](https://github.com/user-attachments/assets/ab3b4147-8889-4597-9f50-e17b70bdef4f)
+
 <pre><code>
 플리 목록 로드(LocalStorage 복원) - 플리 생성/이름변경/삭제, 트랙 추가/제거/정렬 -  변경 즉시 LocalStorage 저장 - 항목 클릭 - 재생
 </code></pre>
